@@ -1,0 +1,17 @@
+services:
+  mariadb:
+    image: mariadb:11
+    container_name: shopex-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: ex4
+      MARIADB_USER: shopex
+      MARIADB_PASSWORD: shopex
+    ports:
+      - "3306:3306"
+    volumes:
+      - shopex-mariadb-data:/var/lib/mysql
+
+volumes:
+  shopex-mariadb-data:

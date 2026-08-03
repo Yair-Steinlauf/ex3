@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <title th:fragment="head(title)" th:replace="~{::title}">
+        <span th:text="${title} + ' - ShopEx'">ShopEx</span>
+    </title>
+</head>
+<body>
+
+<div th:fragment="header">
+    <header class="site-header">
+        <div class="brand"><a th:href="@{/}">ShopEx</a></div>
+        <nav class="main-nav">
+            <a th:href="@{/}">Home</a>
+            <a th:href="@{/products}">Products</a>
+            <a th:href="@{/cart}">Cart <span id="cart-count" class="cart-badge" th:text="${cartCount != null ? cartCount : 0}">0</span></a>
+
+            <span sec:authorize="isAuthenticated()">
+                <a th:href="@{/profile}">Profile</a>
+                <span sec:authorize="hasRole('ADMIN')">
+                    <a th:href="@{/admin}">Admin</a>
+                </span>
+                <form th:action="@{/logout}" method="post" class="inline-form">
+                    <button type="submit" class="link-button">Logout (<span sec:authentication="name">user</span>)</button>
+                </form>
+            </span>
+            <span sec:authorize="isAnonymous()">
+                <a th:href="@{/login}">Login</a>
+                <a th:href="@{/register}">Register</a>
+            </span>
+        </nav>
+    </header>
+</div>
+
+<div th:fragment="footer">
+    <footer class="site-footer">
+        <p>&copy; 2026 ShopEx &mdash; Internet Programming final project.</p>
+    </footer>
+</div>
+
+</body>
+</html>

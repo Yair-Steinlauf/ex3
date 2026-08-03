@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head('Home')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h1>Welcome to ShopEx</h1>
+    <form class="form" th:action="@{/products}" method="get">
+        <label for="q">Search products</label>
+        <input type="text" id="q" name="q" placeholder="Search by name..."/>
+        <button class="btn" type="submit">Search</button>
+    </form>
+
+    <h2>Featured products</h2>
+    <div class="grid" th:if="${featuredProducts != null and !featuredProducts.isEmpty()}">
+        <div class="card" th:each="product : ${featuredProducts}">
+            <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.name}">Product name</a>
+            <p th:text="${product.price} + ' ₪'">0 ₪</p>
+        </div>
+    </div>
+    <p th:if="${featuredProducts == null or featuredProducts.isEmpty()}">
+        <a th:href="@{/products}">Browse all products &rarr;</a>
+    </p>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
