@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head(title='Manage Orders')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h1>Manage Orders</h1>
+
+    <p class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}">Success</p>
+    <p class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}">Error</p>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>User</th>
+            <th>Date</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Update status</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="order : ${orders}">
+            <td th:text="${order.id}">1</td>
+            <td th:text="${order.user != null ? order.user.email : '—'}">user@example.com</td>
+            <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}">2026-01-01</td>
+            <td th:text="${order.totalAmount} + ' ₪'">0</td>
+            <td th:text="${order.status}">PENDING</td>
+            <td>
+                <form th:action="@{/admin/orders/{id}/status(id=${order.id})}" method="post" class="inline-form">
+                    <select name="status">
+                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                                th:selected="${s == order.status}">STATUS</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary">Update</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${orders == null or orders.isEmpty()}">
+            <td colspan="6">No orders yet.</td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
