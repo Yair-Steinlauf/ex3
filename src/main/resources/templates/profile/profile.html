@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head('My Profile')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h1>My Profile</h1>
+
+    <div class="card">
+        <p><strong>Name:</strong> <span th:text="${user.firstName} + ' ' + ${user.lastName}">Jane Doe</span></p>
+        <p><strong>Email:</strong> <span th:text="${user.email}">jane@example.com</span></p>
+        <p><strong>Role:</strong> <span th:text="${user.role}">USER</span></p>
+        <p><strong>Member since:</strong> <span th:text="${user.createdAt}">2026-01-01</span></p>
+    </div>
+
+    <h2 style="margin-top: 2rem;">Order history</h2>
+
+    <table th:if="${orders != null and !orders.isEmpty()}">
+        <thead>
+        <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="order : ${orders}">
+            <td th:text="${order.orderDate}">2026-01-01</td>
+            <td th:text="${order.status}">PENDING</td>
+            <td th:text="${order.totalAmount} + ' ₪'">0 ₪</td>
+            <td>
+                <a th:href="@{/orders/{id}/confirmation(id=${order.id})}">View</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${orders == null or orders.isEmpty()}">You haven't placed any orders yet.</p>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
