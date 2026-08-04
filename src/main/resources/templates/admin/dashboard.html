@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head(title='Admin Dashboard')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h1>Admin Dashboard</h1>
+
+    <div class="grid">
+        <div class="card">
+            <h2 th:text="${totalProducts}">0</h2>
+            <p>Total products</p>
+            <a th:href="@{/admin/products}">Manage products &rarr;</a>
+        </div>
+        <div class="card">
+            <h2 th:text="${pendingOrders}">0</h2>
+            <p>Pending orders</p>
+            <a th:href="@{/admin/orders}">Manage orders &rarr;</a>
+        </div>
+        <div class="card">
+            <h2 th:text="${totalUsers}">0</h2>
+            <p>Total users</p>
+            <a th:href="@{/admin/users}">Manage users &rarr;</a>
+        </div>
+    </div>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
