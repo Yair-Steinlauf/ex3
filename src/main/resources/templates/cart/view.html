@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head('Cart')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h1>Your Cart</h1>
+
+    <p class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}">Success</p>
+    <p class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}">Error</p>
+
+    <div th:if="${cartItems == null or cartItems.isEmpty()}">
+        <p>Your cart is empty. <a th:href="@{/products}">Browse products</a></p>
+    </div>
+
+    <div th:if="${cartItems != null and !cartItems.isEmpty()}">
+        <table>
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th>Unit price</th>
+                <th>Quantity</th>
+                <th>Subtotal</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${cartItems}">
+                <td th:text="${item.name}">Product</td>
+                <td th:text="${item.unitPrice} + ' ₪'">0 ₪</td>
+                <td>
+                    <form th:action="@{/cart/update}" method="post" class="inline-form">
+                        <input type="hidden" name="productId" th:value="${item.productId}"/>
+                        <input type="number" name="quantity" min="1" th:value="${item.quantity}" style="width:4rem"/>
+                        <button class="btn btn-secondary" type="submit">Update</button>
+                    </form>
+                </td>
+                <td th:text="${item.subtotal} + ' ₪'">0 ₪</td>
+                <td>
+                    <form th:action="@{/cart/remove}" method="post" class="inline-form">
+                        <input type="hidden" name="productId" th:value="${item.productId}"/>
+                        <button class="btn btn-danger" type="submit">Remove</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <h2>Total: <span th:text="${cartTotal} + ' ₪'">0 ₪</span></h2>
+
+        <a class="btn" th:href="@{/checkout}">Proceed to checkout</a>
+    </div>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
