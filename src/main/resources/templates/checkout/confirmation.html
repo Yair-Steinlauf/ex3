@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head('Order Confirmation')}"></th:block>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<main>
+    <h1>Order Confirmed</h1>
+    <p class="alert alert-success">
+        Thank you! Your order #<span th:text="${order.id}">1</span> has been placed.
+    </p>
+
+    <p><strong>Status:</strong> <span th:text="${order.status}">PENDING</span></p>
+    <p><strong>Placed:</strong> <span th:text="${order.orderDate}">date</span></p>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price at purchase</th>
+            <th>Subtotal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${order.items}">
+            <td th:text="${item.product.name}">Product</td>
+            <td th:text="${item.quantity}">1</td>
+            <td th:text="${item.priceAtPurchase} + ' ₪'">0 ₪</td>
+            <td th:text="${item.priceAtPurchase * item.quantity} + ' ₪'">0 ₪</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <h2>Total: <span th:text="${order.totalAmount} + ' ₪'">0 ₪</span></h2>
+
+    <a class="btn" th:href="@{/}">Continue shopping</a>
+</main>
+<div th:replace="~{fragments/layout :: footer}"></div>
+</body>
+</html>
