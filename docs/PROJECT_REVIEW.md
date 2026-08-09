@@ -86,6 +86,14 @@ Checked against published Spring Boot / Spring Security / OWASP guidance (source
 
 Sources consulted: [Spring Boot testing reference](https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html), [Spring Security testing reference](https://docs.spring.io/spring-security/site/docs/5.2.x/reference/html/test.html), [Zalando: testing efficiency in Spring Boot](https://engineering.zalando.com/posts/2023/11/mastering-testing-efficiency-in-spring-boot-optimization-strategies-and-best-practices.html), [Vlad Mihalcea: the Open Session In View anti-pattern](https://vladmihalcea.com/the-open-session-in-view-anti-pattern/), [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html), [Baeldung: control the session with Spring Security](https://www.baeldung.com/spring-security-session).
 
+### Fifth round — full refactor
+
+Every controller now goes through the service layer; none references a repository. `UserService` is new, `ProductService` and `OrderService` absorbed the admin operations, and each service declares its transaction boundaries (`readOnly` by default, writes explicit). Forms bind to DTOs in a `dto` package — including a `ProductForm` carrying the category as a plain id, which removed the `@InitBinder` `PropertyEditor` the admin form needed. The two controller advices moved to `controller/advice`.
+
+Dead code removed: two unused repository query variants, six unused `setId` methods, `Order.setItems`, and a dead `reviewError` branch. Product deletion now checks for referencing order lines explicitly rather than catching whatever the ORM happens to throw — which, as a test showed, varies with what the persistence context already holds.
+
+Test suite: 47 → **71**, all green with MySQL stopped. Verified live end to end afterwards: seeding on an empty database, guest cart surviving login, checkout moving stock, reviews, admin CRUD, delete refusal with the right message, invalid status rejected, admin self-disable blocked, 400/403/404 pages — zero unhandled exceptions.
+
 Still open: recording + linking the **demo video** — see `docs/DEMO_GUIDE.md`.
 
 ## Requirements checklist

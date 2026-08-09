@@ -1,82 +1,97 @@
-# מדריך לפרויקט ShopEx — להבין את המבנה ואיך הכול עובד
+# ShopEx — מדריך לפרויקט
 
-המדריך הזה נכתב למי שהנושא טרי אצלו: הוא מסביר מה יש בפרויקט, למה כל קובץ קיים, ואיך בקשה אחת מהדפדפן עוברת דרך כל השכבות. מומלץ לקרוא אותו פעם אחת ברצף, ואז לפתוח את הקבצים לצד הסעיפים.
+מדריך שנכתב למי שהנושא טרי אצלו. קראו אותו פעם אחת ברצף, ואז פתחו את הקבצים לצד הסעיפים. הוא משקף את מצב הקוד אחרי הריפקטור המלא.
 
-## 1. מה הפרויקט עושה
+---
 
-ShopEx הוא אתר חנות: גולשים רואים קטלוג מוצרים, מחפשים ומסננים, מוסיפים לעגלה (גם בלי להתחבר), נרשמים ומתחברים, מבצעים הזמנה, כותבים ביקורות, ורואים היסטוריית הזמנות בפרופיל. למנהל (admin) יש ממשק נפרד ב־`/admin` לניהול מוצרים, הזמנות ומשתמשים.
+## 1. מה האתר עושה
 
-כל הלוגיקה רצה **בצד השרת** (זו הדרישה המרכזית של התרגיל): השרת מקבל בקשה, מריץ לוגיקה, ומחזיר דף HTML מוכן. אין React ואין JavaScript משמעותי — את ה־HTML מייצר מנוע תבניות בשם **Thymeleaf**.
+חנות מקוונת. גולש מדפדף בקטלוג, מחפש ומסנן, מוסיף לעגלה **בלי להתחבר**, נרשם, מתחבר, מבצע הזמנה, כותב ביקורת, ורואה היסטוריית הזמנות בפרופיל. למנהל יש ממשק נפרד ב-`/admin` לניהול מוצרים, הזמנות ומשתמשים.
 
-## 2. התמונה הגדולה: מה קורה כשגולש נכנס לדף
+כל הלוגיקה רצה **בצד השרת** — זו הדרישה המרכזית של התרגיל. השרת מקבל בקשה, מריץ לוגיקה, ומחזיר HTML מוכן. אין React, ואין JavaScript משמעותי.
 
-כל בקשה עוברת את אותו מסלול. לדוגמה, `GET /products?q=tv`:
+**בקצרה במספרים:** 2,292 שורות Java ב-39 קבצים, 19 תבניות HTML, ו-71 טסטים אוטומטיים. הקובץ הגדול ביותר הוא כ-150 שורות — אפשר לקרוא את הפרויקט כולו בערב אחד.
+
+---
+
+## 2. התמונה הגדולה — מסלול של בקשה אחת
+
+זה הדבר החשוב ביותר להבין. כל בקשה עוברת את אותו מסלול. לדוגמה `GET /products?q=tv`:
 
 ```
 דפדפן
   │  GET /products?q=tv
   ▼
-Spring Security (שרשרת פילטרים)      ← בודק: האם הנתיב הזה מותר למשתמש הזה?
+Spring Security  ← שרשרת פילטרים: האם המסלול הזה מותר למשתמש הזה?
   ▼
-DispatcherServlet                     ← "המרכזייה" של Spring MVC, מנתב לפי ה־URL
+DispatcherServlet ← "המרכזייה" של Spring MVC: לאיזה controller לשלוח?
   ▼
-ProductController.list(...)           ← ה־Controller: מקבל פרמטרים, בלי לוגיקה כבדה
+ProductController ← מתרגם HTTP: קורא פרמטרים, מחזיר שם תבנית. בלי לוגיקה עסקית.
   ▼
-ProductService.search(...)            ← ה־Service: הלוגיקה העסקית (איזו שאילתה להריץ)
+ProductService    ← הלוגיקה העסקית: איזו שאילתה, אילו כללים, איזו טרנזקציה.
   ▼
-ProductRepository (Spring Data JPA)   ← ה־Repository: מתורגם אוטומטית ל־SQL
+ProductRepository ← ממשק בלבד; Spring מייצר ממנו SQL אוטומטית.
   ▼
-MySQL (סכמה בשם ex4)                  ← הנתונים עצמם
+MySQL (סכמה ex4)
   ▲
-  │  התוצאות חוזרות למעלה, ה־Controller שם אותן ב־Model
+  │ התוצאות חוזרות למעלה, ה-controller שם אותן ב-Model
   ▼
-Thymeleaf: templates/products/list.html   ← התבנית + הנתונים ⇒ HTML מוכן
+Thymeleaf: templates/products/list.html  ← תבנית + נתונים ⇒ HTML
   ▼
 דפדפן מקבל דף שלם
 ```
 
-לזכור את השרשרת הזו — Controller → Service → Repository → DB ובחזרה דרך תבנית — זה 80% מהבנת הפרויקט.
+**אם תזכרו רק דבר אחד — תזכרו את השרשרת הזו:** ‏Controller → Service → Repository → DB, וחזרה דרך תבנית.
+
+וכלל שנובע ממנה, שמתקיים בכל הפרויקט בלי יוצא מן הכלל: **שום controller לא נוגע ב-repository.** אם אתם מחפשים כלל עסקי — הוא ב-service. אם אתם מחפשים תרגום של HTTP — הוא ב-controller.
+
+---
 
 ## 3. מבנה התיקיות
 
 ```
 ex3/
-├── pom.xml                  ← הגדרת הפרויקט ל־Maven: אילו ספריות (dependencies) בשימוש
-├── mvnw, mvnw.cmd           ← Maven Wrapper: מריץ Maven בלי להתקין אותו
-├── docker-compose.yml       ← מרים MariaDB מקומי עם מסד ex4 בפקודה אחת
-├── docs/                    ← מסמכים: dump של המסד, מדריכים
-├── src/main/
-│   ├── java/com/internetprog/shopex/
-│   │   ├── ShopexApplication.java   ← נקודת הכניסה (main)
-│   │   ├── config/                  ← הגדרות: אבטחה, פילטר, טיפול בשגיאות, badge של העגלה
-│   │   ├── entity/                  ← מחלקות שממופות לטבלאות במסד (JPA)
-│   │   ├── repository/              ← ממשקי גישה למסד (Spring Data)
-│   │   ├── service/                 ← לוגיקה עסקית + עגלת קניות + זריעת נתונים
-│   │   └── controller/              ← מקבלים בקשות HTTP ומחזירים שם של תבנית
-│   │       └── admin/               ← ה־controllers של ממשק הניהול
-│   └── resources/
-│       ├── application.properties   ← חיבור למסד והגדרות
-│       ├── static/css/style.css     ← קובץ עיצוב (מוגש כמו שהוא)
-│       └── templates/               ← תבניות Thymeleaf (ה"דפים" של האתר)
-└── src/test/                        ← 47 טסטים אוטומטיים (ראו סעיף 8)
+├── pom.xml                    ← הגדרת הפרויקט: אילו ספריות בשימוש
+├── mvnw / mvnw.cmd            ← Maven Wrapper: מריץ Maven בלי להתקין אותו
+├── docker-compose.yml         ← מרים MariaDB עם סכמה ex4 בפקודה אחת
+├── docs/                      ← מסמכים + dump של המסד
+├── src/main/java/com/internetprog/shopex/
+│   ├── ShopexApplication.java     ← נקודת הכניסה (main)
+│   ├── config/                    ← אבטחה, פילטר, עוגיות
+│   ├── entity/                    ← מחלקות שממופות לטבלאות (JPA)
+│   ├── repository/                ← ממשקי גישה למסד (Spring Data)
+│   ├── service/                   ← הלוגיקה העסקית
+│   ├── dto/                       ← אובייקטי טפסים
+│   └── controller/                ← מקבלים בקשות, מחזירים שם תבנית
+│       ├── admin/                 ← ה-controllers של ממשק הניהול
+│       └── advice/                ← קוד רוחבי לכל ה-controllers
+├── src/main/resources/
+│   ├── application.properties     ← חיבור למסד והגדרות
+│   ├── static/css/style.css       ← עיצוב (מוגש כמו שהוא)
+│   └── templates/                 ← תבניות Thymeleaf = "הדפים"
+└── src/test/                      ← 71 טסטים (סעיף 8)
 ```
 
-## 4. השכבות, אחת־אחת
+התיקיות מסודרות **לפי שכבה**. היתרון: כשאתם יודעים איזו *שכבה* אתם מחפשים, אתם יודעים לאיזו תיקייה ללכת.
 
-### 4.1 Entity — "טבלה בתחפושת של מחלקה"
+---
 
-תיקיית `entity/` מכילה שש מחלקות עם האנוטציה `@Entity`. כל אחת מייצגת טבלה, כל שדה — עמודה. Hibernate (המנוע שמאחורי JPA) יוצר את הטבלאות לבד בזכות `ddl-auto=update`.
+## 4. השכבות, אחת-אחת
+
+### 4.1 Entity — טבלה בתחפושת של מחלקה
+
+תיקיית `entity/` מכילה שש מחלקות עם `@Entity`. כל אחת = טבלה, כל שדה = עמודה. Hibernate יוצר את הטבלאות לבד.
 
 | מחלקה | טבלה | קשרים |
 |---|---|---|
 | `User` | `users` | מממשת גם `UserDetails` של Spring Security (סעיף 5.3) |
 | `Category` | `categories` | — |
-| `Product` | `products` | `@ManyToOne` ל־Category (להרבה מוצרים אותה קטגוריה) |
-| `Order` | `orders` | `@ManyToOne` ל־User, ‏`@OneToMany` לפריטי ההזמנה |
-| `OrderItem` | `order_items` | `@ManyToOne` ל־Order ול־Product |
-| `Review` | `reviews` | `@ManyToOne` ל־Product ול־User |
+| `Product` | `products` | `@ManyToOne` ל-Category |
+| `Order` | `orders` | `@ManyToOne` ל-User, ‏`@OneToMany` לפריטים |
+| `OrderItem` | `order_items` | `@ManyToOne` ל-Order ול-Product |
+| `Review` | `reviews` | `@ManyToOne` ל-Product ול-User |
 
-דוגמה לקשר (מתוך `Product.java`):
+דוגמה מ-`Product.java`:
 
 ```java
 @ManyToOne
@@ -84,96 +99,138 @@ ex3/
 private Category category;
 ```
 
-זה בדיוק "מספר טבלאות עם קשרים" שהתרגיל דורש. שימו לב גם ל־`cascade = CascadeType.ALL` על `Order.items` — שמירת הזמנה שומרת אוטומטית גם את הפריטים שלה.
+זה בדיוק "טבלאות עם קשרים" שהתרגיל דורש. שימו לב גם ל-`cascade = CascadeType.ALL` על `Order.items` — שמירת הזמנה שומרת אוטומטית גם את השורות שלה.
 
 ### 4.2 Repository — גישה למסד בלי לכתוב SQL
 
-כל ממשק ב־`repository/` יורש מ־`JpaRepository<Entity, Long>` ומקבל בחינם `findAll` ,`findById` ,`save` ,`delete` ועוד. הקסם האמיתי: **שאילתות נגזרות** — Spring קורא את שם המתודה ובונה ממנו SQL:
+כל ממשק יורש מ-`JpaRepository` ומקבל בחינם `findAll` ,`findById` ,`save` ,`delete`. הקסם: **שאילתות נגזרות** — Spring קורא את *שם המתודה* ובונה ממנו SQL:
 
 ```java
-Optional<User> findByEmail(String email);                       // WHERE email = ?
-Page<Product> findByNameContainingIgnoreCase(String n, Pageable p); // LIKE %..% + עימוד
-long countByStatus(String status);                              // SELECT COUNT(*)
+Optional<User> findByEmail(String email);                            // WHERE email = ?
+Page<Product> findByNameContainingIgnoreCase(String n, Pageable p);  // LIKE %..% + עימוד
+long countByStatus(String status);                                   // SELECT COUNT(*)
+boolean existsByProductId(Long productId);                           // SELECT EXISTS
 ```
 
-יש גם שאילתה מפורשת אחת (`@Query`) ב־`ProductRepository` — עדכון מלאי אטומי (סעיף 6.3).
+אנחנו לא כותבים שום מימוש — Spring מייצר אותו בזמן ריצה.
 
-אין שום מימוש שלנו לממשקים האלה — Spring מייצר את המימוש בזמן ריצה והופך כל ממשק ל־**Bean** (סעיף 5.1).
+יש גם שאילתה מפורשת אחת, ב-`ProductRepository`, וכדאי להבין אותה כי היא הלב של בטיחות הקנייה:
+
+```java
+@Modifying
+@Query("update Product p set p.stock = p.stock - :quantity where p.id = :id and p.stock >= :quantity")
+int decrementStock(@Param("id") Long id, @Param("quantity") int quantity);
+```
+
+**הבדיקה וההורדה קורות בפקודת SQL אחת.** לכן שני קונים במקביל לא יכולים לקנות את היחידה האחרונה פעמיים (סעיף 6.3).
 
 ### 4.3 Service — הלוגיקה העסקית
 
-- `ProductService` — חיפוש/סינון/מיון/עימוד של הקטלוג, ורשימת "מוצרים מובחרים" לדף הבית.
-- `OrderService` — התהליך הטרנזקציוני של ביצוע הזמנה (סעיף 6.3).
-- `ReviewService` — שליפה ושמירה של ביקורות + חישוב ממוצע דירוג.
-- `CartService` — **עגלת הקניות**: bean בסקופ session (סעיף 5.2). לא ניגש למסד בכלל.
-- `AdminSeeder`, `ProductSeeder` — רצים פעם אחת בעליית השרת ("זריעה", סעיף 6.5).
-- `CustomUserDetailsService` — מגשר בין Spring Security לטבלת המשתמשים (סעיף 5.3).
+| שירות | אחריות |
+|---|---|
+| `ProductService` | חיפוש/סינון/מיון/עימוד + CRUD של מוצרים לאדמין |
+| `OrderService` | ביצוע הזמנה (טרנזקציוני), קריאת הזמנות, עדכון סטטוס |
+| `UserService` | הרשמה (כולל גיבוב סיסמה) וניהול משתמשים |
+| `ReviewService` | קריאה והוספה של ביקורות, חישוב ממוצע |
+| `CartService` | **עגלת הקניות** — bean בסקופ session (סעיף 5.2) |
+| `AdminSeeder`, `ProductSeeder` | זריעת נתונים בעליית השרת (סעיף 6.5) |
+| `CustomUserDetailsService` | מגשר בין Spring Security לטבלת המשתמשים |
 
-### 4.4 Controller — הדלת של כל דף
+לכל שירות יש **גבולות טרנזקציה מוצהרים**:
 
-Controller הוא מחלקה עם `@Controller`, שבה כל מתודה ממופה ל־URL עם `@GetMapping`/`@PostMapping`. המתודה מקבלת פרמטרים מהבקשה, קוראת ל־service, שמה נתונים ב־`Model`, ומחזירה **שם של תבנית**:
+```java
+@Service
+@Transactional(readOnly = true)   // ברירת מחדל: קריאה בלבד
+public class ProductService {
+    @Transactional                // כתיבה — מוצהר במפורש
+    public Product create(ProductForm form) { ... }
+```
+
+כך ברור במבט אחד מה משנה נתונים ומה רק קורא.
+
+### 4.4 DTO — למה טופס לא נקשר לישות
+
+ב-`dto/` יש שלוש מחלקות: `RegistrationForm` ,`ReviewForm` ,`ProductForm`. הן נראות כמו הישויות, אז למה הן קיימות?
+
+**כי ספרינג מזריק לאובייקט הטופס גם את משתני ה-URI מהכתובת.** בקוד המקורי טופס הביקורת נקשר ישירות לישות `Review`, ולכן ה-`{id}` מהכתובת `/products/{id}/reviews` נכנס לשדה `Review.id`. אז `save()` ביצע **עדכון של ביקורת קיימת** במקום הוספה — באג אמיתי שהיה בפרויקט ודרס ביקורות של משתמשים אחרים.
+
+עם DTO הבעיה לא קיימת: ל-`ReviewForm` פשוט אין שדה `id`, והישות נבנית בשרת.
+
+ל-`ProductForm` יש יתרון נוסף: הקטגוריה מגיעה כ-`categoryId` פשוט (מספר), ולכן לא צריך את ה-`@InitBinder` עם `PropertyEditor` שהיה בקוד הישן כדי להמיר ערך לישות `Category`. פחות "קסם" להסביר.
+
+### 4.5 Controller — הדלת של כל דף
+
+Controller = מחלקה עם `@Controller`, שכל מתודה בה ממופה ל-URL. היא מתרגמת HTTP ותו לא:
 
 ```java
 @GetMapping("/{id}")
 public String detail(@PathVariable Long id, Model model) {
-    Product product = productService.getById(id);   // לוגיקה — בשירות
-    model.addAttribute("product", product);          // נתונים לתבנית
-    return "products/detail";                        // ⇒ templates/products/detail.html
+    populateDetailModel(model, productService.getById(id));  // הלוגיקה בשירות
+    model.addAttribute("reviewForm", new ReviewForm());
+    return "products/detail";                                 // ⇒ templates/products/detail.html
 }
 ```
 
-מיפוי דפים ↔ controllers: ‏`HomeController` (דף הבית), `ProductController` (קטלוג+ביקורות), `CartController` (עגלה), `CheckoutController` (תשלום ואישור), `AuthController` (הרשמה+התחברות), `ProfileController` (פרופיל), ותחת `admin/` — dashboard, מוצרים, הזמנות, משתמשים.
+מפת הניתוב המלאה:
 
-**כלל חשוב — דרך אחת לזהות את המשתמש:** בכל מקום שצריך את המשתמש המחובר, הקונטרולר פשוט מבקש אותו כפרמטר:
+| URL | Controller | תבנית |
+|---|---|---|
+| `/` | `HomeController` | `index.html` |
+| `/products`, `/products/{id}` | `ProductController` | `products/list.html`, `products/detail.html` |
+| `POST /products/{id}/reviews` | `ProductController` | redirect |
+| `/cart`, `/cart/add|update|remove` | `CartController` | `cart/view.html` |
+| `/checkout`, `/checkout/place` | `CheckoutController` | `checkout/checkout.html` |
+| `/orders/{id}/confirmation` | `CheckoutController` | `checkout/confirmation.html` |
+| `/login`, `/register` | `AuthController` | `auth/login.html`, `auth/register.html` |
+| `/profile` | `ProfileController` | `profile/profile.html` |
+| `/admin` | `AdminDashboardController` | `admin/dashboard.html` |
+| `/admin/products/**` | `AdminProductController` | `admin/products.html`, `admin/product-form.html` |
+| `/admin/orders/**` | `AdminOrderController` | `admin/orders.html` |
+| `/admin/users/**` | `AdminUserController` | `admin/users.html` |
 
-```java
-public String profile(@AuthenticationPrincipal User currentUser, Model model) { ... }
-```
+ב-`controller/advice/` יש קוד שרץ עבור **כל** ה-controllers:
+- `CartModelAdvice` — מוסיף את מונה העגלה לכל דף, כדי שה-badge בכותרת יהיה נכון בכל מקום.
+- `GlobalExceptionHandler` — תופס חריגות וממפה אותן לדפי שגיאה (סעיף 6.6).
 
-`@AuthenticationPrincipal` היא הדרך המומלצת בספרינג; שליפה ידנית דרך `SecurityContextHolder`, או ערבוב בין `Principal` ל־`Authentication`, נחשבים דפוסים ישנים. שווה לשים לב לשתי נקודות:
-
-- זה עובד כי `User` מממשת `UserDetails` — כלומר מה שספרינג שומר בסשן אחרי ההתחברות זו הישות שלנו עצמה, ולכן אין צורך לשלוף שוב מהמסד בכל בקשה.
-- **אף קונטרולר לא בודק בעצמו אם המשתמש מחובר.** ההחלטה מי נכנס לאן מתקבלת במקום אחד בלבד — `SecurityConfig`. אם מסלול דורש התחברות, הקונטרולר יכול פשוט להניח שיש משתמש.
-
-**כלל חשוב — טופס נקשר ל־DTO, לא לישות:** ‏`AuthController.RegistrationForm` ו־`ProductController.ReviewForm` הם מחלקות "טופס" רגילות, לא `@Entity`. הסיבה מעשית: ספרינג מזריק לאובייקט הטופס גם את משתני ה־URI (למשל `{id}` מהכתובת). כשקשרנו את הטופס ישירות לישות `Review`, ה־`id` מהכתובת נכנס לישות ו־`save()` ביצע **עדכון** של ביקורת קיימת במקום הוספה — באג אמיתי שהיה בפרויקט. עם DTO הישות נבנית בשרת ו־`id` תמיד מתחיל כ־null.
-
-### 4.5 Templates — Thymeleaf
+### 4.6 Templates — Thymeleaf
 
 תבנית Thymeleaf היא HTML רגיל עם אטריביוטים של `th:`:
 
 ```html
 <div class="card" th:each="product : ${productPage.content}">   <!-- לולאה -->
-    <h3 th:text="${product.name}">שם לדוגמה</h3>               <!-- הצבת טקסט -->
-    <a th:href="@{/products/{id}(id=${product.id})}">פרטים</a>  <!-- בניית קישור -->
+    <h3 th:text="${product.name}">שם לדוגמה</h3>                <!-- הצבת טקסט -->
+    <a th:href="@{/products/{id}(id=${product.id})}">פרטים</a>   <!-- בניית קישור -->
 </div>
 ```
 
-- `fragments/layout.html` — ה־header/footer המשותפים; כל דף מושך אותם עם `th:replace` (כמו include).
-- `sec:authorize="isAuthenticated()"` / `hasRole('ADMIN')` — מציג חלקים מהדף רק למי שמורשה (זו הצגה בלבד! האכיפה האמיתית היא ב־SecurityConfig).
-- טפסים עם `th:action` מקבלים אוטומטית שדה CSRF נסתר, ו־`th:field` + `th:errors` קושרים שדות לאובייקט ומציגים שגיאות ולידציה.
+- `fragments/layout.html` — header/footer משותפים; כל דף מושך אותם עם `th:replace`.
+- `sec:authorize="hasRole('ADMIN')"` — מציג חלקים רק למורשים. **זו הסתרה ויזואלית בלבד** — האכיפה האמיתית ב-`SecurityConfig`.
+- טפסים עם `th:action` מקבלים אוטומטית שדה CSRF נסתר; ‏`th:field` + `th:errors` קושרים שדות ומציגים שגיאות ולידציה.
+
+---
 
 ## 5. שלושת המושגים שחייבים לדעת להסביר
 
-### 5.1 Bean ו־Dependency Injection
+### 5.1 Bean והזרקת תלויות
 
-**Bean** = אובייקט ש־Spring יוצר ומנהל בשבילנו. כל מה שמסומן `@Component`/`@Service`/`@Controller`/`@Configuration` (או repository) הופך ל־bean יחיד (singleton) כברירת מחדל.
+**Bean** = אובייקט ש-Spring יוצר ומנהל. כל מה שמסומן `@Component`/`@Service`/`@Controller`/`@Configuration` (וכל repository) הופך ל-bean.
 
-**Dependency Injection**: במקום ש־controller יעשה `new ProductService()`, הוא מצהיר על התלות בקונסטרקטור ו־Spring מספק אותה:
+**הזרקת תלויות**: במקום `new ProductService()`, ה-controller מצהיר על התלות בקונסטרקטור ו-Spring מספק אותה:
 
 ```java
 public ProductController(ProductService productService, ReviewService reviewService) {
-    this.productService = productService;   // Spring הזריק את ה־beans
+    this.productService = productService;   // Spring הזריק
     this.reviewService = reviewService;
 }
 ```
 
-בפרויקט אין אף `@Autowired` על שדות, אין אובייקטים סטטיים גלובליים, ואין גישה ידנית ל־request/session — בדיוק כמו שהתרגיל דורש.
+בפרויקט אין אף `@Autowired` על שדה, אין אובייקטים סטטיים גלובליים, ואין גישה ידנית ל-request/session — בדיוק כפי שהתרגיל דורש.
 
-### 5.2 Session ו־@SessionScope — העגלה
+### 5.2 Session ו-`@SessionScope` — העגלה
 
-HTTP הוא חסר זיכרון (stateless). **Session** = זיכרון שהשרת שומר פר־גולש (מזוהה ע"י cookie בשם JSESSIONID).
+HTTP הוא חסר זיכרון. **Session** = זיכרון שהשרת שומר פר-גולש, מזוהה בעוגיית `JSESSIONID`.
 
-הדרך ה"נקייה" של Spring להשתמש ב־session היא bean עם `@SessionScope`:
+הדרך הנקייה של Spring היא bean בסקופ session:
 
 ```java
 @Component
@@ -181,119 +238,145 @@ HTTP הוא חסר זיכרון (stateless). **Session** = זיכרון שהשר
 public class CartService implements Serializable { ... }
 ```
 
-Spring יוצר **מופע נפרד לכל session**, ומזריק ל־controllers (שהם singletons) שגריר (proxy) שמפנה בכל בקשה לעגלה של הגולש הנכון. ככה שני גולשים לא רואים אחד את העגלה של השני, ואנחנו לא נוגעים ב־`HttpSession` ידנית.
+Spring יוצר **מופע נפרד לכל גולש**, ומזריק ל-controllers (שהם singletons) שגריר שמפנה בכל בקשה לעגלה הנכונה. שני גולשים לא רואים זה את עגלתו של זה, ואנחנו לא נוגעים ב-`HttpSession` ידנית.
 
-בונוס שכדאי להגיד בדמו: אחרי login, ‏Spring Security מחליף את מזהה ה־session (הגנה מפני session fixation) אבל **שומר את התוכן** — ולכן העגלה שמולאה כאורח שורדת את ההתחברות.
+בונוס להסבר: אחרי login, ‏Spring Security מחליף את מזהה ה-session (הגנה מפני session fixation) אבל **שומר את התוכן** — ולכן העגלה שמולאה כאורח שורדת את ההתחברות.
 
-### 5.3 Spring Security — התחברות והרשאות
+### 5.3 Spring Security — הזדהות והרשאות
 
-הכול מוגדר ב־`config/SecurityConfig.java`:
+הכול ב-`config/SecurityConfig.java`, וזה **המקום היחיד** שמחליט מי נכנס לאן:
 
-- `securityFilterChain` קובע **מי רשאי מה** לפי נתיב: סטטיים/קטלוג/עגלה פתוחים לכולם, `checkout`/`profile`/`orders` רק למחוברים, `/admin/**` רק ל־`ROLE_ADMIN`, וכל השאר — למחוברים.
-- `formLogin` נותן לנו מסך התחברות ותהליך שלם בחינם; אנחנו סיפקנו רק את התבנית `auth/login.html`.
-- איך Spring יודע מי המשתמשים? `CustomUserDetailsService` מממש `loadUserByUsername` ושולף `User` מהמסד לפי אימייל. `User` מממש `UserDetails`, ולכן Spring יודע לקרוא ממנו סיסמה, הרשאות (`ROLE_USER`/`ROLE_ADMIN`) והאם החשבון מושבת.
-- סיסמאות נשמרות כ־**BCrypt hash** (ה־bean של `PasswordEncoder`) — אף פעם לא טקסט גלוי.
-- ההרשמה ב־`AuthController` היא שלנו: ולידציה, בדיקת אימייל כפול, הצפנת סיסמה, שמירה.
-- `DisabledUserFilter` — **פילטר** משלנו בשרשרת האבטחה: Spring בודק `enabled` רק בזמן ההתחברות, ולכן משתמש שהאדמין השבית היה ממשיך לעבוד עד שהסשן היה פג. הפילטר בודק מחדש בכל בקשה ומסיים את הסשן מיד. (זה גם ממלא את סעיף הבונוס בתרגיל: "Use optionally: Interceptors/Filters".)
+```java
+.requestMatchers("/", "/login", "/register").permitAll()
+.requestMatchers("/cart", "/cart/**").permitAll()        // קניות בלי התחברות
+.requestMatchers("/checkout", "/checkout/**").authenticated()
+.requestMatchers("/admin/**").hasRole("ADMIN")
+.anyRequest().authenticated()
+```
 
-## 6. הזרימות המרכזיות צעד־אחר־צעד
+- **איך משיגים את המשתמש המחובר?** דרך אחת בלבד, בכל הקונטרולרים:
+  ```java
+  public String profile(@AuthenticationPrincipal User currentUser, Model model) { ... }
+  ```
+  זו הדרך שספרינג ממליץ עליה. שליפה ידנית דרך `SecurityContextHolder`, או ערבוב `Principal` עם `Authentication`, נחשבים דפוסים ישנים. זה עובד כי `User` מממשת `UserDetails` — מה שיושב בסשן אחרי ההתחברות זו הישות שלנו עצמה.
+- **אף controller לא בודק בעצמו אם המשתמש מחובר.** אם מסלול דורש התחברות, ה-controller מניח שיש משתמש.
+- סיסמאות נשמרות כ-**BCrypt hash** — אף פעם לא טקסט גלוי.
+- `DisabledUserFilter` — **פילטר** משלנו: ספרינג בודק `enabled` רק בזמן ההתחברות, ולכן משתמש שהאדמין השבית היה ממשיך לעבוד עד שהסשן פג. הפילטר בודק מחדש בכל בקשה ומסיים את הסשן מיד. (זה גם ממלא את סעיף הבונוס בתרגיל: *"Use optionally: Interceptors/Filters"*.)
+
+---
+
+## 6. הזרימות המרכזיות
 
 ### 6.1 חיפוש בקטלוג
-`GET /products?q=tv&categoryId=1&sort=price&page=0` → ‏`ProductController.list` מעביר הכול ל־`ProductService.search`, שבוחר שאילתה נגזרת מתאימה ומחזיר `Page<Product>` (עימוד של Spring Data). התבנית מציירת גם את טופס החיפוש (עם הערכים שנבחרו) וגם קישורי עמודים שמשמרים את כל הפרמטרים.
+`GET /products?q=tv&categoryId=1&sort=price&page=0` → ‏`ProductController.list` מעביר הכול ל-`ProductService.search`, שבוחר שאילתה נגזרת מתאימה ומחזיר `Page<Product>`. התבנית מציירת את טופס החיפוש עם הערכים שנבחרו, וקישורי עמודים ששומרים את כל הפרמטרים.
 
 ### 6.2 עגלה כאורח → התחברות → העגלה שרדה
-1. אורח מוסיף מוצר: ‏`POST /cart/add` → ‏`CartService.addItem` שומר שורה **בזיכרון של ה־session** (מעתיק שם ומחיר כדי שהעגלה תהיה יציבה).
-2. אורח לוחץ Checkout: ‏Spring Security חוסם (`/checkout` דורש התחברות), שומר את הבקשה המקורית, ומפנה ל־login.
-3. אחרי התחברות מוצלחת — Spring מחזיר אוטומטית ל־checkout (מנגנון saved request), והעגלה עדיין שם (סעיף 5.2).
+1. אורח מוסיף מוצר: `CartService.addItem` שומר שורה **בזיכרון הסשן** (מעתיק שם ומחיר, כדי שהעגלה תהיה יציבה גם אם המחיר ישתנה).
+2. אורח לוחץ Checkout: ‏Spring Security חוסם, שומר את הבקשה, ומפנה ל-login.
+3. אחרי התחברות — Spring מחזיר אוטומטית ל-checkout, והעגלה עדיין שם.
 
-### 6.3 ביצוע הזמנה — טרנזקציה
+### 6.3 ביצוע הזמנה — הטרנזקציה
 `OrderService.placeOrder` מסומן `@Transactional` — הכול או כלום:
 
-1. לכל שורת עגלה מריצים `UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?` — **בדיקת המלאי וההורדה קורות בפקודת SQL אחת**, ולכן שני קונים במקביל לא יכולים לקנות את היחידה האחרונה פעמיים.
-2. אם ה־UPDATE לא עדכן שורות ⇒ אין מלאי ⇒ נזרקת חריגה ⇒ **rollback** מלא (גם ההורדות שכבר בוצעו לשורות קודמות מתבטלות).
-3. נבנה `Order` עם `OrderItem` לכל שורה (כולל `priceAtPurchase` — המחיר בזמן הקנייה), והסכום מחושב מהפריטים עצמם.
-4. שמירה אחת (ה־cascade שומר את הפריטים), ניקוי העגלה, והפניה לדף אישור.
+1. לכל שורה: `UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?` — בדיקה והורדה בפקודה אחת.
+2. אם ה-UPDATE לא עדכן שורות ⇒ אין מלאי ⇒ חריגה ⇒ **rollback מלא**, כולל הורדות שכבר בוצעו לשורות קודמות.
+3. נבנה `Order` עם `OrderItem` לכל שורה, כולל `priceAtPurchase` — המחיר בזמן הקנייה.
+4. הסכום מחושב **מהשורות עצמן**, ולכן תמיד תואם להן.
+5. שמירה אחת (cascade שומר את השורות), ניקוי העגלה, והפניה לדף אישור.
+
+זה עומד במבחן אמיתי: 8 קניות במקביל על היחידה האחרונה ⇒ בדיוק הזמנה אחת מצליחה, המלאי מגיע ל-0 ואף פעם לא לשלילי.
 
 ### 6.4 ביקורות
-`POST /products/{id}/reviews` פתוח רק למחוברים (גם ברמת ה־security וגם בבדיקה בקוד). האובייקט `Review` עובר ולידציה (`@Min(1) @Max(5)` על הדירוג) עם `@Valid` + `BindingResult`; שגיאה מחזירה את הדף עם הודעה ליד השדה.
+פתוח רק למחוברים (נאכף ב-`SecurityConfig`). ה-DTO עובר ולידציה (`@Min(1) @Max(5)`), ושגיאה מחזירה את הדף עם הודעה ליד השדה.
 
-### 6.5 עלייה על מסד ריק (דרישה מפורשת בתרגיל)
-`application.properties` כולל `createDatabaseIfNotExist=true` (יוצר את הסכמה), `ddl-auto=update` (יוצר טבלאות), ושני seeders שמאזינים ל־`ApplicationReadyEvent`: ‏`AdminSeeder` יוצר חשבון אדמין אם אין, ‏`ProductSeeder` זורע קטלוג אם אין מוצרים. לכן אפשר למחוק את המסד לגמרי — והאתר עולה מוכן לעבודה.
+### 6.5 עלייה על מסד ריק — דרישה מפורשת בתרגיל
+`createDatabaseIfNotExist=true` יוצר את הסכמה, `ddl-auto=update` יוצר טבלאות, ושני seeders מאזינים ל-`ApplicationReadyEvent`: ‏`AdminSeeder` יוצר חשבון אדמין אם אין, ‏`ProductSeeder` זורע קטלוג אם אין מוצרים. אפשר למחוק את המסד לגמרי — והאתר עולה מוכן.
 
 ### 6.6 טיפול בשגיאות
-`GlobalExceptionHandler` (עם `@ControllerAdvice`) תופס חריגות מכל ה־controllers ומחזיר את **הסטטוס הנכון** עם דף מעוצב מ־`templates/error/`:
+`GlobalExceptionHandler` מחזיר את **הסטטוס הנכון** עם דף מעוצב:
 
 | מצב | דוגמה | תוצאה |
 |---|---|---|
-| כתובת לא קיימת / מוצר לא קיים | `/products/9999` | 404 |
-| ערך שלא ניתן להמיר בכתובת | `/products/abc`, `?page=abc` | 400 |
-| גישה אסורה | משתמש רגיל ב־`/admin` | 403 |
-| כל חריגה לא צפויה | — | נרשם ללוג, מוצג 500 ידידותי |
+| משאב לא קיים | `/products/9999` | 404 |
+| ערך שלא ניתן להמיר | `/products/abc`, `?page=abc` | 400 |
+| גישה אסורה | משתמש רגיל ב-`/admin` | 403 |
+| חריגה לא צפויה | — | נרשם ללוג, מוצג 500 ידידותי |
 
-הסדר חשוב: מטפל כללי אחד ל־`Exception` היה "בולע" גם חריגות שנושאות סטטוס משלהן והופך הכול ל־500, ולכן יש מטפלים ייעודיים **לפני** הכללי.
+הסדר חשוב: מטפל כללי אחד ל-`Exception` היה "בולע" גם חריגות שנושאות סטטוס משלהן והופך הכול ל-500, ולכן יש מטפלים ייעודיים **לפני** הכללי.
 
-## 7. application.properties בשורה אחת לכל שורה
+---
+
+## 7. application.properties — שורה-שורה
 
 ```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/ex4?createDatabaseIfNotExist=true...
-                                   # איפה המסד, ושייווצר אם איננו
-spring.datasource.username/password=shopex/shopex   # פרטי החיבור (תואם ל־docker-compose)
-spring.jpa.hibernate.ddl-auto=update # Hibernate יוצר/מעדכן טבלאות לפי ה־entities
-spring.jpa.show-sql=true             # מדפיס את ה־SQL לקונסול — נוח להראות בדמו
+                                     # איפה המסד, וייווצר אם איננו
+spring.datasource.username/password=shopex/shopex   # תואם ל-docker-compose
+spring.jpa.hibernate.ddl-auto=update # Hibernate יוצר/מעדכן טבלאות לפי הישויות
+spring.jpa.show-sql=true             # מדפיס SQL לקונסול — נוח להדגמה
 spring.jpa.open-in-view=false        # ראו הסבר למטה
-spring.thymeleaf.cache=false         # בזמן פיתוח: לרענן תבניות בלי הפעלה מחדש
+spring.thymeleaf.cache=false         # רענון תבניות בלי הפעלה מחדש
 ```
 
-**מה זה `open-in-view`?** כברירת מחדל ספרינג משאיר את חיבור ה־JPA פתוח גם בזמן ציור התבנית, כדי שאפשר יהיה "לשלוף עוד" מהמסד באמצע ה־HTML. זה נוח אבל נחשב anti-pattern: החיבור מוחזק זמן ארוך ונוצרות שאילתות נסתרות (בעיית N+1). כיבינו את זה, ולכן כל מה שהתבנית צריכה נשלף מראש — למשל `findWithItemsById` ב־`OrderRepository` מביא הזמנה יחד עם השורות והמוצרים שלה בשאילתה אחת (`@EntityGraph`) עבור דף האישור.
+**מה זה `open-in-view`?** כברירת מחדל ספרינג משאיר את חיבור ה-JPA פתוח גם בזמן ציור התבנית, כדי שאפשר יהיה "לשלוף עוד" באמצע ה-HTML. זה נוח אבל נחשב anti-pattern: החיבור מוחזק זמן ארוך ונוצרות שאילתות נסתרות (בעיית N+1). כיבינו אותו, ולכן מה שהתבנית צריכה נשלף מראש — למשל `findWithItemsById` מביא הזמנה יחד עם השורות והמוצרים בשאילתה אחת (`@EntityGraph`).
 
-## 8. הטסטים האוטומטיים
+בנוסף, `WebCookieConfig` מסמן את עוגיית הסשן ב-`SameSite=Lax`, לפי המלצת OWASP.
 
-בפרויקט 47 טסטים תחת `src/test/`. הם רצים על **H2 בזיכרון** ולא צריכים MySQL — כלומר `./mvnw clean package` עובד גם כשהמסד כבוי. ההפרדה נעשית עם פרופיל: `@ActiveProfiles("test")` טוען את `src/test/resources/application-test.properties`.
+---
 
-שני סוגי טסטים, לפי ההמלצה הרשמית של ספרינג:
+## 8. הטסטים
+
+71 טסטים תחת `src/test/`, רצים על **H2 בזיכרון** — כלומר `./mvnw clean package` עובד גם כשה-MySQL כבוי. ההפרדה בפרופיל: `@ActiveProfiles("test")` טוען את `application-test.properties`.
 
 **א. טסטי "פרוסה" (slice) — מרימים רק שכבה אחת, ולכן מהירים:**
 
-| קובץ | אנוטציה | מה נבדק |
-|---|---|---|
-| `ProductRepositoryTest` | `@DataJpaTest` | חיפוש case-insensitive, סינון לפי קטגוריה, עימוד, ובעיקר `decrementStock` — שהוא מוריד מלאי רק כשיש מספיק |
-| `OrderServiceTest` | `@DataJpaTest` + `@Import` | יצירת הזמנה, הורדת מלאי, סכום = סכום השורות, ניקוי עגלה, ודחייה כשאין מלאי (כולל rollback על כל השורות) |
+| קובץ | מה נבדק |
+|---|---|
+| `ProductRepositoryTest` | שאילתות נגזרות, עימוד, ו-`decrementStock` שמוריד מלאי רק כשיש מספיק |
+| `ProductServiceTest` | CRUD, ולידציה, וסירוב למחוק מוצר שיש לו הזמנות |
+| `OrderServiceTest` | הזמנה, מלאי, סכום=שורות, rollback, בעלות על הזמנה, עדכון סטטוס |
+| `UserServiceTest` | הרשמה עם גיבוב סיסמה, אימייל תפוס, ואיסור על אדמין להשבית את עצמו |
 
-**ב. טסטי שכבת ווב עם `MockMvc`** — שולחים בקשות HTTP מדומות בלי להרים שרת אמיתי:
+**ב. טסטי שכבת ווב עם `MockMvc`** — בקשות HTTP מדומות בלי שרת אמיתי:
 
 | קובץ | מה נבדק |
 |---|---|
-| `SecurityAccessControlTest` | מטריצת הרשאות מלאה (אנונימי/משתמש/אדמין), אכיפת CSRF, וכותרות אבטחה |
-| `CartCheckoutFlowTest` | המסע המלא: עגלה כאורח → בידוד בין סשנים → checkout → מלאי יורד → דף אישור, וגם שמשתמש אחר לא יכול לפתוח הזמנה שאינה שלו |
-| `ReviewSubmissionTest` | שביקורת חדשה **מתווספת** ולא דורסת ביקורת קיימת (הבאג מסעיף 4.4), ושדירוג לא חוקי נדחה |
-| `AdminProductFormTest` | שטופס המוצר נפתח (באג ה־500 שהיה), ושולידציה מציגה שגיאות בלי לשמור זבל |
-| `ErrorHandlingTest` | 404 / 400 / 403 מחזירים את הסטטוס והדף הנכונים |
+| `SecurityAccessControlTest` | מטריצת הרשאות מלאה, אכיפת CSRF, כותרות אבטחה |
+| `CartCheckoutFlowTest` | המסע המלא: עגלת אורח → בידוד סשנים → checkout → דף אישור → בעלות |
+| `ReviewSubmissionTest` | שביקורת חדשה מתווספת ולא דורסת קיימת |
+| `AdminProductFormTest` | שהטופס נפתח, ושולידציה מציגה שגיאות בלי לשמור זבל |
+| `ErrorHandlingTest` | 404 / 400 / 403 מחזירים סטטוס ודף נכונים |
 
-שני כלים ששווה להכיר בטסטים האלה: `.with(user(someUser))` מריץ בקשה בתור משתמש מסוים, ו־`.with(csrf())` מצרף token תקין — בלעדיו הבקשה נדחית, וזה בדיוק מה שאנחנו רוצים לבדוק.
+שני כלים ששווה להכיר: `.with(user(someUser))` מריץ בקשה בתור משתמש מסוים, ו-`.with(csrf())` מצרף token תקין — בלעדיו הבקשה נדחית, וזה בדיוק מה שרוצים לבדוק.
 
 הרצה: `./mvnw test`
+
+---
 
 ## 9. איך מריצים
 
 ```bash
-docker compose up -d      # להרים מסד (או MySQL מקומי עם סכמה ex4)
-./mvnw clean package      # קומפילציה + טסטים (לא צריך שהמסד ירוץ — הטסטים על H2)
+docker compose up -d      # מסד (או MySQL מקומי עם סכמה ex4)
+./mvnw clean package      # קומפילציה + טסטים (לא צריך מסד — הטסטים על H2)
 ./mvnw spring-boot:run    # http://localhost:8080
 ```
 
-אדמין: `admin@shopex.local` / `Admin123!`. ‏dump לדוגמה: `docs/ex4_dump.sql` (כולל לקוח דמו `demo@shopex.local` / `Demo1234!` והזמנה אחת).
+דרוש **JDK 21 ומעלה**. אדמין: `admin@shopex.local` / `Admin123!`. ‏dump לדוגמה: `docs/ex4_dump.sql`, כולל לקוח דמו `demo@shopex.local` / `Demo1234!` והזמנה אחת.
 
-## 10. שאלות שסביר שישאלו — ותשובה בשורה
+---
 
-- **איפה ה־MVC?** Model = entities + הנתונים ב־Model, ‏View = תבניות Thymeleaf, ‏Controller = תיקיית controller.
-- **איפה שימוש ב־session?** העגלה — bean בסקופ session, מוזרק דרך proxy (לא `HttpSession` ידני).
-- **איפה טרנזקציה?** `OrderService.placeOrder` — ‏`@Transactional`, כולל rollback כשאין מלאי.
-- **איך מונעים ששני קונים יקנו את הפריט האחרון?** הורדת מלאי מותנית בפקודת UPDATE אחת (אטומי במסד).
-- **מה ההבדל בין `sec:authorize` בתבנית ל־SecurityConfig?** התבנית רק מסתירה ויזואלית; האכיפה האמיתית — בשרשרת הפילטרים.
-- **איך מקבלים את המשתמש המחובר?** `@AuthenticationPrincipal User currentUser` — דרך אחת בכל הקונטרולרים, בלי `SecurityContextHolder` ובלי בדיקות הזדהות מקומיות.
-- **למה הסיסמאות ב־BCrypt?** hash חד־כיווני עם salt — גם דליפת מסד לא חושפת סיסמאות.
-- **מה קורה על מסד ריק?** נוצר אוטומטית: סכמה (ddl-auto), אדמין וקטלוג (seeders).
-- **איך עובד עימוד?** `Pageable`/`Page` של Spring Data — ה־repository מקבל בקשת עמוד ומחזיר עמוד + מטא־נתונים (סה"כ עמודים וכו').
-- **למה טופס נקשר ל־DTO ולא לישות?** כי ספרינג מזריק לאובייקט הטופס גם משתני URI; קשירה לישות `Review` גרמה ל־`save()` לעדכן ביקורת קיימת במקום להוסיף.
-- **למה כיביתם `open-in-view`?** כדי שלא ייווצרו שאילתות נסתרות בזמן ציור ה־HTML; מה שהתבנית צריכה נשלף מראש עם `@EntityGraph`.
-- **איך בודקים שהאתר באמת עובד?** 47 טסטים אוטומטיים על H2 (`./mvnw test`) — פירוט בסעיף 8.
+## 10. שאלות שסביר שישאלו — תשובה בשורה
+
+- **איפה ה-MVC?** Model = ישויות + הנתונים ב-`Model`, ‏View = תבניות Thymeleaf, ‏Controller = תיקיית `controller`.
+- **איפה שימוש ב-session?** העגלה — bean בסקופ session, מוזרק דרך proxy.
+- **איפה טרנזקציה?** `OrderService.placeOrder`, כולל rollback כשאין מלאי.
+- **איך מונעים ששני קונים יקנו את הפריט האחרון?** הורדת מלאי מותנית בפקודת UPDATE אחת — אטומי במסד.
+- **למה controller לא ניגש ל-repository?** כדי שלכל כלל עסקי יהיה מקום אחד ויחיד. אין חוץ מזה.
+- **למה טופס נקשר ל-DTO ולא לישות?** כי ספרינג מזריק לטופס גם משתני URI; קשירה לישות `Review` גרמה ל-`save()` לעדכן ביקורת קיימת במקום להוסיף.
+- **איך מקבלים את המשתמש המחובר?** `@AuthenticationPrincipal User currentUser` — דרך אחת בכל מקום.
+- **מה ההבדל בין `sec:authorize` ל-SecurityConfig?** התבנית מסתירה ויזואלית; האכיפה בשרשרת הפילטרים.
+- **למה BCrypt?** hash חד-כיווני עם salt — גם דליפת מסד לא חושפת סיסמאות.
+- **למה כיביתם `open-in-view`?** כדי שלא ייווצרו שאילתות נסתרות בזמן ציור ה-HTML.
+- **מה קורה על מסד ריק?** נוצר אוטומטית: סכמה, אדמין וקטלוג.
+- **איך עובד עימוד?** `Pageable`/`Page` של Spring Data — בקשת עמוד פנימה, עמוד + מטא-נתונים החוצה.
+- **איך יודעים שהכול עובד?** 71 טסטים אוטומטיים (`./mvnw test`) — סעיף 8.
