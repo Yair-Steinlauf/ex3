@@ -6,6 +6,9 @@ import com.internetprog.shopex.entity.Review;
 import com.internetprog.shopex.service.ProductService;
 import com.internetprog.shopex.service.ReviewService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -59,13 +62,13 @@ public class ProductController {
     public String detail(@PathVariable Long id, Model model) {
         Product product = productService.getById(id);
         populateDetailModel(model, product);
-        model.addAttribute("reviewForm", new Review());
+        model.addAttribute("reviewForm", new ReviewForm());
         return "products/detail";
     }
 
     @PostMapping("/{id}/reviews")
     public String addReview(@PathVariable Long id,
-                             @Valid @ModelAttribute("reviewForm") Review reviewForm,
+                             @Valid @ModelAttribute("reviewForm") ReviewForm reviewForm,
                              BindingResult bindingResult,
                              Authentication authentication,
                              Model model) {
@@ -82,7 +85,8 @@ public class ProductController {
         }
 
         if (!bindingResult.hasErrors()) {
-            Optional<Review> saved = reviewService.addReview(product, authentication.getName(), reviewForm);
+            Optional<Review> saved = reviewService.addReview(
+                    product, authentication.getName(), reviewForm.getRating(), reviewForm.getComment());
             if (saved.isPresent()) {
                 return "redirect:/products/" + id;
             }
@@ -105,5 +109,36 @@ public class ProductController {
         return authentication != null
                 && authentication.isAuthenticated()
                 && !(authentication instanceof AnonymousAuthenticationToken);
+    }
+
+    /**
+     * Form backing object for the review form. Deliberately NOT the Review entity:
+     * Spring binds URI template variables (here {id}) onto the model attribute, which
+     * would set Review.id and turn save() into an update of an unrelated review.
+     */
+    public static class ReviewForm {
+
+        @Min(value = 1, message = "Rating must be between 1 and 5")
+        @Max(value = 5, message = "Rating must be between 1 and 5")
+        private int rating = 5;
+
+        @Size(max = 1000, message = "Comment must be at most 1000 characters")
+        private String comment;
+
+        public int getRating() {
+            return rating;
+        }
+
+        public void setRating(int rating) {
+            this.rating = rating;
+        }
+
+        public String getComment() {
+            return comment;
+        }
+
+        public void setComment(String comment) {
+            this.comment = comment;
+        }
     }
 }

@@ -44,14 +44,19 @@ public class ReviewService {
 
     /**
      * Persist a new review for the given product, authored by the user with the given email.
+     * The Review entity is built here from plain values rather than bound directly from the
+     * request, so its id always starts out null and save() is guaranteed to INSERT.
      *
      * @return the saved review, or empty if no user exists for that email
      */
-    public Optional<Review> addReview(Product product, String userEmail, Review reviewData) {
+    public Optional<Review> addReview(Product product, String userEmail, int rating, String comment) {
         return userRepository.findByEmail(userEmail).map(user -> {
-            reviewData.setProduct(product);
-            reviewData.setUser(user);
-            return reviewRepository.save(reviewData);
+            Review review = new Review();
+            review.setProduct(product);
+            review.setUser(user);
+            review.setRating(rating);
+            review.setComment(comment);
+            return reviewRepository.save(review);
         });
     }
 }
