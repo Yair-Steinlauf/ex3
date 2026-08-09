@@ -70,4 +70,11 @@ public class ProductService {
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }
+
+    /**
+     * Most recently added products, for the home page's featured section.
+     */
+    public List<Product> getFeatured() {
+        return productRepository.findTop4ByOrderByCreatedAtDesc();
+    }
 }
