@@ -76,9 +76,7 @@ public class ProductSeeder {
     }
 
     private Category getOrCreateCategory(String name) {
-        return categoryRepository.findAll().stream()
-                .filter(c -> c.getName().equalsIgnoreCase(name))
-                .findFirst()
+        return categoryRepository.findByNameIgnoreCase(name)
                 .orElseGet(() -> {
                     Category category = new Category();
                     category.setName(name);

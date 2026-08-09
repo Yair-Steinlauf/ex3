@@ -27,9 +27,7 @@ public class AdminDashboardController {
     @GetMapping
     public String dashboard(Model model) {
         long totalProducts = productRepository.count();
-        long pendingOrders = orderRepository.findAll().stream()
-                .filter(order -> "PENDING".equals(order.getStatus()))
-                .count();
+        long pendingOrders = orderRepository.countByStatus("PENDING");
         long totalUsers = userRepository.count();
 
         model.addAttribute("totalProducts", totalProducts);
