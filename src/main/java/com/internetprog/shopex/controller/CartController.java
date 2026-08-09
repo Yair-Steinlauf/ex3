@@ -1,8 +1,8 @@
 package com.internetprog.shopex.controller;
 
 import com.internetprog.shopex.entity.Product;
-import com.internetprog.shopex.repository.ProductRepository;
 import com.internetprog.shopex.service.CartService;
+import com.internetprog.shopex.service.ProductService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,11 +19,11 @@ import java.util.Optional;
 public class CartController {
 
     private final CartService cartService;
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
-    public CartController(CartService cartService, ProductRepository productRepository) {
+    public CartController(CartService cartService, ProductService productService) {
         this.cartService = cartService;
-        this.productRepository = productRepository;
+        this.productService = productService;
     }
 
     @GetMapping("/cart")
@@ -37,15 +37,13 @@ public class CartController {
     public String addToCart(@RequestParam Long productId,
                              @RequestParam(defaultValue = "1") int quantity,
                              RedirectAttributes redirectAttributes) {
-        Optional<Product> product = productRepository.findById(productId);
+        Optional<Product> product = productService.findById(productId);
         if (product.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "Product not found.");
             return "redirect:/cart";
         }
-        if (quantity < 1) {
-            quantity = 1;
-        }
-        cartService.addItem(product.get(), quantity);
+
+        cartService.addItem(product.get(), Math.max(quantity, 1));
         redirectAttributes.addFlashAttribute("successMessage",
                 "Added " + product.get().getName() + " to your cart.");
         return "redirect:/cart";

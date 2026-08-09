@@ -1,8 +1,8 @@
 package com.internetprog.shopex.controller.admin;
 
-import com.internetprog.shopex.repository.OrderRepository;
-import com.internetprog.shopex.repository.ProductRepository;
-import com.internetprog.shopex.repository.UserRepository;
+import com.internetprog.shopex.service.OrderService;
+import com.internetprog.shopex.service.ProductService;
+import com.internetprog.shopex.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,27 +12,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/admin")
 public class AdminDashboardController {
 
-    private final ProductRepository productRepository;
-    private final OrderRepository orderRepository;
-    private final UserRepository userRepository;
+    private final ProductService productService;
+    private final OrderService orderService;
+    private final UserService userService;
 
-    public AdminDashboardController(ProductRepository productRepository,
-                                     OrderRepository orderRepository,
-                                     UserRepository userRepository) {
-        this.productRepository = productRepository;
-        this.orderRepository = orderRepository;
-        this.userRepository = userRepository;
+    public AdminDashboardController(ProductService productService,
+                                     OrderService orderService,
+                                     UserService userService) {
+        this.productService = productService;
+        this.orderService = orderService;
+        this.userService = userService;
     }
 
     @GetMapping
     public String dashboard(Model model) {
-        long totalProducts = productRepository.count();
-        long pendingOrders = orderRepository.countByStatus("PENDING");
-        long totalUsers = userRepository.count();
-
-        model.addAttribute("totalProducts", totalProducts);
-        model.addAttribute("pendingOrders", pendingOrders);
-        model.addAttribute("totalUsers", totalUsers);
+        model.addAttribute("totalProducts", productService.count());
+        model.addAttribute("pendingOrders", orderService.countPending());
+        model.addAttribute("totalUsers", userService.count());
         return "admin/dashboard";
     }
 }

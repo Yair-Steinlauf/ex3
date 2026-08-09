@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 
@@ -147,5 +148,93 @@ class OrderServiceTest {
                 .isInstanceOf(IllegalStateException.class);
 
         assertThat(orderRepository.count()).isZero();
+    }
+
+    // --- reading orders back ---
+
+    @Test
+    void findForUser_returnsOnlyThatUsersOrders() {
+        User other = new User();
+        other.setFirstName("Other");
+        other.setLastName("Buyer");
+        other.setEmail("other-buyer@example.com");
+        other.setPassword("hash");
+        other.setRole("USER");
+        entityManager.persist(other);
+
+        orderService.placeOrder(customer, cartWith(headphones, 1));
+        orderService.placeOrder(other, cartWith(headphones, 2));
+
+        assertThat(orderService.findForUser(customer)).hasSize(1);
+        assertThat(orderService.findForUser(other)).hasSize(1);
+        assertThat(orderService.findAllNewestFirst()).hasSize(2);
+    }
+
+    @Test
+    void getForOwner_returnsTheOrderWithItsLines() {
+        Order placed = orderService.placeOrder(customer, cartWith(headphones, 2));
+        entityManager.flush();
+        entityManager.clear();
+
+        Order loaded = orderService.getForOwner(placed.getId(), customer);
+
+        assertThat(loaded.getId()).isEqualTo(placed.getId());
+        assertThat(loaded.getItems()).hasSize(1);
+        assertThat(loaded.getItems().get(0).getProduct().getName()).isEqualTo("Headphones");
+    }
+
+    @Test
+    void getForOwner_refusesSomebodyElsesOrder() {
+        User intruder = new User();
+        intruder.setFirstName("Nosy");
+        intruder.setLastName("Person");
+        intruder.setEmail("intruder-service@example.com");
+        intruder.setPassword("hash");
+        intruder.setRole("USER");
+        entityManager.persist(intruder);
+
+        Order placed = orderService.placeOrder(customer, cartWith(headphones, 1));
+
+        assertThatThrownBy(() -> orderService.getForOwner(placed.getId(), intruder))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("403");
+    }
+
+    @Test
+    void getForOwner_reportsAMissingOrderAsNotFound() {
+        assertThatThrownBy(() -> orderService.getForOwner(999_999L, customer))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("404");
+    }
+
+    // --- admin status updates ---
+
+    @Test
+    void countPending_countsOnlyPendingOrders() {
+        Order first = orderService.placeOrder(customer, cartWith(headphones, 1));
+        orderService.placeOrder(customer, cartWith(headphones, 1));
+        assertThat(orderService.countPending()).isEqualTo(2);
+
+        orderService.updateStatus(first.getId(), "SHIPPED");
+
+        assertThat(orderService.countPending()).isEqualTo(1);
+    }
+
+    @Test
+    void updateStatus_rejectsAStatusOutsideTheAllowedList() {
+        Order placed = orderService.placeOrder(customer, cartWith(headphones, 1));
+
+        assertThatThrownBy(() -> orderService.updateStatus(placed.getId(), "HACKED"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("Invalid status");
+
+        assertThat(orderRepository.findById(placed.getId()).orElseThrow().getStatus()).isEqualTo("PENDING");
+    }
+
+    @Test
+    void updateStatus_rejectsAnUnknownOrder() {
+        assertThatThrownBy(() -> orderService.updateStatus(999_999L, "SHIPPED"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("not found");
     }
 }

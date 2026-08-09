@@ -1,6 +1,6 @@
 package com.internetprog.shopex.controller.admin;
 
-import com.internetprog.shopex.repository.OrderRepository;
+import com.internetprog.shopex.service.OrderService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,24 +10,20 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
-
 @Controller
 @RequestMapping("/admin/orders")
 public class AdminOrderController {
 
-    private static final List<String> STATUSES = List.of("PENDING", "CONFIRMED", "SHIPPED", "CANCELLED");
+    private final OrderService orderService;
 
-    private final OrderRepository orderRepository;
-
-    public AdminOrderController(OrderRepository orderRepository) {
-        this.orderRepository = orderRepository;
+    public AdminOrderController(OrderService orderService) {
+        this.orderService = orderService;
     }
 
     @GetMapping
     public String list(Model model) {
-        model.addAttribute("orders", orderRepository.findAllByOrderByOrderDateDesc());
-        model.addAttribute("statuses", STATUSES);
+        model.addAttribute("orders", orderService.findAllNewestFirst());
+        model.addAttribute("statuses", OrderService.STATUSES);
         return "admin/orders";
     }
 
@@ -35,20 +31,13 @@ public class AdminOrderController {
     public String updateStatus(@PathVariable Long id,
                                 @RequestParam String status,
                                 RedirectAttributes redirectAttributes) {
-        if (!STATUSES.contains(status)) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Invalid status: " + status);
-            return "redirect:/admin/orders";
+        try {
+            orderService.updateStatus(id, status);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "Order #" + id + " status updated to " + status + ".");
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
         }
-        return orderRepository.findById(id)
-                .map(order -> {
-                    order.setStatus(status);
-                    orderRepository.save(order);
-                    redirectAttributes.addFlashAttribute("successMessage", "Order #" + order.getId() + " status updated to " + status + ".");
-                    return "redirect:/admin/orders";
-                })
-                .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "Order not found.");
-                    return "redirect:/admin/orders";
-                });
+        return "redirect:/admin/orders";
     }
 }

@@ -34,9 +34,6 @@ public class Order {
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public User getUser() {
         return user;
@@ -70,7 +67,4 @@ public class Order {
         return items;
     }
 
-    public void setItems(List<OrderItem> items) {
-        this.items = items;
-    }
 }

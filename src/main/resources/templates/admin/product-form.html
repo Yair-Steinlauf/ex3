@@ -9,8 +9,8 @@
 <main>
     <h1 th:text="${formTitle}">Product Form</h1>
 
-    <form th:action="${product.id == null} ? @{/admin/products} : @{/admin/products/{id}(id=${product.id})}"
-          th:object="${product}" method="post" class="form">
+    <form th:action="${productId == null} ? @{/admin/products} : @{/admin/products/{id}(id=${productId})}"
+          th:object="${productForm}" method="post" class="form">
 
         <label for="name">Name</label>
         <input type="text" id="name" th:field="*{name}"/>
@@ -32,8 +32,8 @@
         <input type="text" id="imageUrl" th:field="*{imageUrl}"/>
         <span class="error-text" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}">Image URL error</span>
 
-        <label for="category">Category</label>
-        <select id="category" th:field="*{category}">
+        <label for="categoryId">Category</label>
+        <select id="categoryId" th:field="*{categoryId}">
             <option value="">-- none --</option>
             <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}">Category</option>
         </select>

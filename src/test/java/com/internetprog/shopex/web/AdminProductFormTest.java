@@ -81,7 +81,7 @@ class AdminProductFormTest {
                 .andExpect(status().is3xxRedirection());
 
         assertThat(productRepository.count()).isEqualTo(before + 1);
-        assertThat(productRepository.findByNameContainingIgnoreCase("Test Widget")).hasSize(1);
+        assertThat(productRepository.findAll()).anyMatch(p -> "Test Widget".equals(p.getName()));
     }
 
     @Test
@@ -94,7 +94,7 @@ class AdminProductFormTest {
                         .param("stock", "-3"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/product-form"))
-                .andExpect(model().attributeHasFieldErrors("product", "name", "price", "stock"));
+                .andExpect(model().attributeHasFieldErrors("productForm", "name", "price", "stock"));
 
         assertThat(productRepository.count()).isEqualTo(before);
     }
@@ -106,9 +106,9 @@ class AdminProductFormTest {
                         .param("price", "0")
                         .param("stock", "1"))
                 .andExpect(status().isOk())
-                .andExpect(model().attributeHasFieldErrors("product", "price"));
+                .andExpect(model().attributeHasFieldErrors("productForm", "price"));
 
-        assertThat(productRepository.findByNameContainingIgnoreCase("Free Widget")).isEmpty();
+        assertThat(productRepository.findAll()).noneMatch(p -> "Free Widget".equals(p.getName()));
     }
 
     @Test

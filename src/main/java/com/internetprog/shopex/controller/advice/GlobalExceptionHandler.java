@@ -1,4 +1,4 @@
-package com.internetprog.shopex.config;
+package com.internetprog.shopex.controller.advice;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

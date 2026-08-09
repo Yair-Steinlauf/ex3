@@ -1,7 +1,7 @@
 package com.internetprog.shopex.controller.admin;
 
 import com.internetprog.shopex.entity.User;
-import com.internetprog.shopex.repository.UserRepository;
+import com.internetprog.shopex.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,15 +15,15 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin/users")
 public class AdminUserController {
 
-    private final UserRepository userRepository;
+    private final UserService userService;
 
-    public AdminUserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public AdminUserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
     public String list(Model model, @AuthenticationPrincipal User currentUser) {
-        model.addAttribute("users", userRepository.findAll());
+        model.addAttribute("users", userService.findAll());
         model.addAttribute("currentUserEmail", currentUser != null ? currentUser.getEmail() : null);
         return "admin/users";
     }
@@ -32,25 +32,13 @@ public class AdminUserController {
     public String toggleEnabled(@PathVariable Long id,
                                  @AuthenticationPrincipal User currentUser,
                                  RedirectAttributes redirectAttributes) {
-        return userRepository.findById(id)
-                .map(user -> {
-                    boolean isSelf = currentUser != null
-                            && currentUser.getEmail() != null
-                            && currentUser.getEmail().equalsIgnoreCase(user.getEmail());
-                    if (isSelf) {
-                        redirectAttributes.addFlashAttribute("errorMessage",
-                                "You cannot disable your own account.");
-                        return "redirect:/admin/users";
-                    }
-                    user.setEnabled(!user.isEnabled());
-                    userRepository.save(user);
-                    redirectAttributes.addFlashAttribute("successMessage",
-                            "User " + user.getEmail() + " is now " + (user.isEnabled() ? "enabled" : "disabled") + ".");
-                    return "redirect:/admin/users";
-                })
-                .orElseGet(() -> {
-                    redirectAttributes.addFlashAttribute("errorMessage", "User not found.");
-                    return "redirect:/admin/users";
-                });
+        try {
+            User updated = userService.toggleEnabled(id, currentUser);
+            redirectAttributes.addFlashAttribute("successMessage",
+                    "User " + updated.getEmail() + " is now " + (updated.isEnabled() ? "enabled" : "disabled") + ".");
+        } catch (IllegalStateException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/users";
     }
 }

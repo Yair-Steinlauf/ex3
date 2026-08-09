@@ -1,4 +1,4 @@
-package com.internetprog.shopex.config;
+package com.internetprog.shopex.controller.advice;
 
 import com.internetprog.shopex.service.CartService;
 import org.springframework.web.bind.annotation.ControllerAdvice;

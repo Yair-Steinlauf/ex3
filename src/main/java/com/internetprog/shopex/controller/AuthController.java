@@ -1,12 +1,8 @@
 package com.internetprog.shopex.controller;
 
-import com.internetprog.shopex.entity.User;
-import com.internetprog.shopex.repository.UserRepository;
+import com.internetprog.shopex.dto.RegistrationForm;
+import com.internetprog.shopex.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -15,15 +11,17 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Login page and self-service registration. The login POST itself is handled by
+ * Spring Security's filter chain, not by a method here.
+ */
 @Controller
 public class AuthController {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+    public AuthController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping("/login")
@@ -44,91 +42,18 @@ public class AuthController {
                             BindingResult bindingResult,
                             RedirectAttributes redirectAttributes) {
 
-        if (form.getPassword() != null && !form.getPassword().equals(form.getConfirmPassword())) {
+        if (form.getPassword() != null && !form.passwordsMatch()) {
             bindingResult.rejectValue("confirmPassword", "password.mismatch", "Passwords do not match");
         }
-
-        if (form.getEmail() != null && userRepository.findByEmail(form.getEmail()).isPresent()) {
+        if (userService.emailIsTaken(form.getEmail())) {
             bindingResult.rejectValue("email", "email.duplicate", "An account with this email already exists");
         }
-
         if (bindingResult.hasErrors()) {
             return "auth/register";
         }
 
-        User user = new User();
-        user.setFirstName(form.getFirstName());
-        user.setLastName(form.getLastName());
-        user.setEmail(form.getEmail());
-        user.setPassword(passwordEncoder.encode(form.getPassword()));
-        user.setRole("USER");
-        user.setEnabled(true);
-        userRepository.save(user);
-
+        userService.register(form);
         redirectAttributes.addFlashAttribute("successMessage", "Registration successful. Please log in.");
         return "redirect:/login";
-    }
-
-    /**
-     * Registration form backing object (kept in this file to stay within the auth vertical's scope).
-     */
-    public static class RegistrationForm {
-
-        @NotBlank(message = "First name is required")
-        private String firstName;
-
-        @NotBlank(message = "Last name is required")
-        private String lastName;
-
-        @NotBlank(message = "Email is required")
-        @Email(message = "Enter a valid email address")
-        private String email;
-
-        @NotBlank(message = "Password is required")
-        @Size(min = 8, message = "Password must be at least 8 characters")
-        private String password;
-
-        @NotBlank(message = "Please confirm your password")
-        private String confirmPassword;
-
-        public String getFirstName() {
-            return firstName;
-        }
-
-        public void setFirstName(String firstName) {
-            this.firstName = firstName;
-        }
-
-        public String getLastName() {
-            return lastName;
-        }
-
-        public void setLastName(String lastName) {
-            this.lastName = lastName;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public String getPassword() {
-            return password;
-        }
-
-        public void setPassword(String password) {
-            this.password = password;
-        }
-
-        public String getConfirmPassword() {
-            return confirmPassword;
-        }
-
-        public void setConfirmPassword(String confirmPassword) {
-            this.confirmPassword = confirmPassword;
-        }
     }
 }
