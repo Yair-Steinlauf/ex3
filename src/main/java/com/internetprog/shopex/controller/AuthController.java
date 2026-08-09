@@ -5,6 +5,7 @@ import com.internetprog.shopex.repository.UserRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -84,6 +85,7 @@ public class AuthController {
         private String email;
 
         @NotBlank(message = "Password is required")
+        @Size(min = 8, message = "Password must be at least 8 characters")
         private String password;
 
         @NotBlank(message = "Please confirm your password")
