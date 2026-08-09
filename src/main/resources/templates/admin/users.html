@@ -34,7 +34,8 @@
                 <span th:if="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}" class="error-text">(this is you)</span>
                 <form th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
                       th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post" class="inline-form"
-                      th:attr="onsubmit=|return confirm('${u.enabled ? 'Disable' : 'Enable'} user ${u.email}?');|">
+                      th:attr="data-user-email=${u.email},data-action=${u.enabled} ? 'Disable' : 'Enable'"
+                      onsubmit="return confirm(this.dataset.action + ' user ' + this.dataset.userEmail + '?');">
                     <button type="submit" class="link-button" th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
                 </form>
             </td>

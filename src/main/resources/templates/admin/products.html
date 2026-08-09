@@ -36,7 +36,8 @@
                 <a th:href="@{/admin/products/{id}/edit(id=${product.id})}">Edit</a>
                 &nbsp;
                 <form th:action="@{/admin/products/{id}/delete(id=${product.id})}" method="post" class="inline-form"
-                      th:attr="onsubmit=|return confirm('Delete product &quot;${product.name}&quot;? This cannot be undone.');|">
+                      th:attr="data-product-name=${product.name}"
+                      onsubmit="return confirm('Delete product: ' + this.dataset.productName + '\nThis cannot be undone.');">
                     <button type="submit" class="link-button" style="color: var(--color-danger);">Delete</button>
                 </form>
             </td>
