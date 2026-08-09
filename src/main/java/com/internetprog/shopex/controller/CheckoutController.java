@@ -64,7 +64,7 @@ public class CheckoutController {
     @GetMapping("/orders/{id}/confirmation")
     public String confirmation(@PathVariable Long id, Principal principal, Model model) {
         User user = currentUser(principal);
-        Order order = orderRepository.findById(id)
+        Order order = orderRepository.findWithItemsById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         if (order.getUser() == null || !order.getUser().getId().equals(user.getId())) {
