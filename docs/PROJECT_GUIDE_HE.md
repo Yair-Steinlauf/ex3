@@ -180,6 +180,7 @@ Spring יוצר **מופע נפרד לכל session**, ומזריק ל־controlle
 - איך Spring יודע מי המשתמשים? `CustomUserDetailsService` מממש `loadUserByUsername` ושולף `User` מהמסד לפי אימייל. `User` מממש `UserDetails`, ולכן Spring יודע לקרוא ממנו סיסמה, הרשאות (`ROLE_USER`/`ROLE_ADMIN`) והאם החשבון מושבת.
 - סיסמאות נשמרות כ־**BCrypt hash** (ה־bean של `PasswordEncoder`) — אף פעם לא טקסט גלוי.
 - ההרשמה ב־`AuthController` היא שלנו: ולידציה, בדיקת אימייל כפול, הצפנת סיסמה, שמירה.
+- `DisabledUserFilter` — **פילטר** משלנו בשרשרת האבטחה: Spring בודק `enabled` רק בזמן ההתחברות, ולכן משתמש שהאדמין השבית היה ממשיך לעבוד עד שהסשן היה פג. הפילטר בודק מחדש בכל בקשה ומסיים את הסשן מיד. (זה גם ממלא את סעיף הבונוס בתרגיל: "Use optionally: Interceptors/Filters".)
 
 ## 6. הזרימות המרכזיות צעד־אחר־צעד
 

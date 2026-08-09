@@ -29,6 +29,27 @@ Second round (same day): the optional items were applied too, each verified agai
 
 Deliberately left as-is: the generic "Invalid email or password" message for disabled accounts (it avoids leaking account state) and `spring.jpa.show-sql=true` (handy for showing JPA at work during the demo).
 
+### Third round — full adversarial test pass (same day)
+
+A systematic test pass (authorization matrix over every route × role for GET *and* POST, CSRF, malformed input, XSS, session behaviour, concurrency, UTF-8) found **two broken features that the earlier reviews missed**, because the earlier passes never opened the admin product form and never submitted a *valid* review. Both were pre-existing (commits `93d5f3b` / `aca5ae3`), and both are now fixed:
+
+1. **Admin product create/edit was completely unusable** — `GET /admin/products/new` and `/{id}/edit` returned 500. `product-form.html` used a conditional expression inside a fragment parameter (`head(title=${product.id == null ? ... })`), which Thymeleaf forbids in that restricted context. The title is now computed in the controller (`formTitle`). This also fixes product validation errors, which previously 500'd while re-rendering the same template.
+2. **Review submission was broken and could destroy another user's review** — `@ModelAttribute` bound the URI template variable `{id}` onto the `Review` **entity's** id, so `save()` merged instead of inserting: with no matching row it threw `ObjectOptimisticLockingFailureException` (500, nothing saved); with a matching row it silently **overwrote that review** (verified: the admin's review was replaced by another user's). Replaced with a `ReviewForm` DTO, mirroring the existing `RegistrationForm` pattern, so the entity is built server-side and the id always starts null.
+3. **Type-mismatch URLs returned 500** (`/products/abc`, `?page=abc`, `?categoryId=abc`, `/orders/abc/confirmation`, `cart/add?productId=abc`) — now 400 with a new `error/400.html`.
+4. **A disabled account kept working in its existing session** (Spring Security only checks `isEnabled()` at login). Added `DisabledUserFilter`, which re-checks per request and ends the session — this also satisfies the spec's optional "Interceptors/Filters if relevant" item.
+5. **Stored XSS in the admin pages** — product name / user email were interpolated into a `confirm(...)` JS string, and HTML escaping does not protect a JS string context (a `'` in the name broke out and executed). Values now travel via `data-` attributes read through `this.dataset`, with no user data inside the JS literal. Admin-only injection, so severity was low, but the pattern was wrong.
+
+Verified green after the fixes, on a rebuilt app booted against an empty database:
+
+- Authorization matrix: every `/admin` route 403 for a regular user and redirect-to-login for anonymous, on GET **and** POST; no state mutated by the rejected calls.
+- CSRF: POST without a token blocked everywhere, including `logout` (session preserved).
+- Concurrency: 8 simultaneous checkouts for the last unit → exactly 1 order, stock 0 (never negative), exactly 1 unit sold, and every order's total equals the sum of its lines.
+- Sessions: two carts stay isolated, the cart survives login, logout clears it.
+- Validation: registration (duplicate/format/mismatch/blank/short password) and product admin (negative price, zero price, negative stock, blank name) all re-render with messages and persist nothing.
+- Error pages: 400 / 403 / 404 / 500 all render the custom templates with the right status.
+- SQL injection in search has no effect (parameterized); public pages escape HTML correctly; Hebrew/UTF-8 round-trips through `utf8mb4`.
+- **Zero unhandled exceptions** in the application log across the entire run.
+
 Still open: recording + linking the **demo video** — see `docs/DEMO_GUIDE.md`.
 
 ## Requirements checklist
