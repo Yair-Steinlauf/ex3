@@ -81,9 +81,9 @@ CREATE TABLE reviews (
 INSERT INTO users (first_name, last_name, email, password, role, enabled) VALUES
 ('Shop', 'Admin', 'admin@shopex.local', '$2a$10$oHO29aAwW6KGXQQQ27Ox6.fvsZa/OF/ywLG238LGohQJFRqyZNim.', 'ADMIN', TRUE);
 
--- Sample demo customer: demo@shopex.local / Demo1234!
+-- Sample demo customer: demo@shopex.local / Demo1234!  (real BCrypt hash, verified to match)
 INSERT INTO users (first_name, last_name, email, password, role, enabled) VALUES
-('Demo', 'Customer', 'demo@shopex.local', '$2a$10$oHO29aAwW6KGXQQQ27Ox6.fvsZa/OF/ywLG238LGohQJFRqyZNim.', 'USER', TRUE);
+('Demo', 'Customer', 'demo@shopex.local', '$2a$10$9vsgowK8yw14ApKpDsXuQOtpYnBcbd5XEm/5YsGRiGPK3Y88Z8/Ae', 'USER', TRUE);
 
 INSERT INTO categories (name) VALUES
 ('Electronics'), ('Home & Kitchen'), ('Books');
