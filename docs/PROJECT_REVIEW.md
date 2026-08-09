@@ -17,7 +17,19 @@ All six bugs below plus the JDK/README gaps were fixed in the commits following 
 - Home page renders 4 featured products.
 - `java.version` lowered to 21; full `./mvnw clean package` re-verified green on a plain JDK 21. README documents the JDK and the start-DB-before-build ordering.
 
-Still open (intentionally left for you): recording + linking the **demo video**, adding a sample order to the dump, and the optional robustness items in the last section.
+Second round (same day): the optional items were applied too, each verified against a rebuilt app —
+
+- Atomic conditional `UPDATE` for stock (oversell impossible; verified a 9999-unit checkout is rejected with a clean message and no stock change, and that the failure rolls the order back).
+- Order total now computed from the order's own lines.
+- `CartService` methods synchronized + defensive copy from `getItems()`.
+- Registration requires ≥ 8-character passwords (verified server-side rejection).
+- Admin dashboard counts pending orders in SQL (`countByStatus`); seeder uses `findByNameIgnoreCase`.
+- Removed the explicit `DaoAuthenticationProvider` bean and the redundant `hibernate.dialect` property — both startup warnings are gone; login re-verified.
+- `docs/ex4_dump.sql` now ships a demo-customer order (total matches its lines; stock adjusted), so admin orders/dashboard/profile have data right after import.
+
+Deliberately left as-is: the generic "Invalid email or password" message for disabled accounts (it avoids leaking account state) and `spring.jpa.show-sql=true` (handy for showing JPA at work during the demo).
+
+Still open: recording + linking the **demo video** — see `docs/DEMO_GUIDE.md`.
 
 ## Requirements checklist
 
