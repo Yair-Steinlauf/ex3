@@ -49,7 +49,6 @@
 
         <div sec:authorize="isAuthenticated()">
             <h3>Write a review</h3>
-            <p th:if="${reviewError != null}" class="alert alert-error" th:text="${reviewError}">Error</p>
             <form class="form" th:action="@{/products/{id}/reviews(id=${product.id})}" method="post" th:object="${reviewForm}">
                 <label for="rating">Rating</label>
                 <select id="rating" th:field="*{rating}">

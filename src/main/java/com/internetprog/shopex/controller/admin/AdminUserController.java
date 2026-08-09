@@ -1,7 +1,8 @@
 package com.internetprog.shopex.controller.admin;
 
+import com.internetprog.shopex.entity.User;
 import com.internetprog.shopex.repository.UserRepository;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,21 +22,21 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public String list(Model model, Authentication authentication) {
+    public String list(Model model, @AuthenticationPrincipal User currentUser) {
         model.addAttribute("users", userRepository.findAll());
-        model.addAttribute("currentUserEmail", authentication != null ? authentication.getName() : null);
+        model.addAttribute("currentUserEmail", currentUser != null ? currentUser.getEmail() : null);
         return "admin/users";
     }
 
     @PostMapping("/{id}/toggle-enabled")
     public String toggleEnabled(@PathVariable Long id,
-                                 Authentication authentication,
+                                 @AuthenticationPrincipal User currentUser,
                                  RedirectAttributes redirectAttributes) {
         return userRepository.findById(id)
                 .map(user -> {
-                    boolean isSelf = authentication != null
-                            && authentication.getName() != null
-                            && authentication.getName().equalsIgnoreCase(user.getEmail());
+                    boolean isSelf = currentUser != null
+                            && currentUser.getEmail() != null
+                            && currentUser.getEmail().equalsIgnoreCase(user.getEmail());
                     if (isSelf) {
                         redirectAttributes.addFlashAttribute("errorMessage",
                                 "You cannot disable your own account.");

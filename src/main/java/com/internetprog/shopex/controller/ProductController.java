@@ -3,6 +3,7 @@ package com.internetprog.shopex.controller;
 import com.internetprog.shopex.entity.Category;
 import com.internetprog.shopex.entity.Product;
 import com.internetprog.shopex.entity.Review;
+import com.internetprog.shopex.entity.User;
 import com.internetprog.shopex.service.ProductService;
 import com.internetprog.shopex.service.ReviewService;
 import jakarta.validation.Valid;
@@ -10,8 +11,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.Page;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Product catalog: search/browse, product detail, and review submission.
@@ -66,36 +65,26 @@ public class ProductController {
         return "products/detail";
     }
 
+    /**
+     * Only reachable by an authenticated user — SecurityConfig is the single
+     * place that decides that, so this method does not re-check it.
+     */
     @PostMapping("/{id}/reviews")
     public String addReview(@PathVariable Long id,
                              @Valid @ModelAttribute("reviewForm") ReviewForm reviewForm,
                              BindingResult bindingResult,
-                             Authentication authentication,
+                             @AuthenticationPrincipal User currentUser,
                              Model model) {
         Product product = productService.getById(id);
 
-        if (!isAuthenticated(authentication)) {
-            // Defensive server-side check: Spring Security should already reject an
-            // unauthenticated POST to this endpoint, but we don't rely solely on the
-            // review form being hidden client-side.
+        if (bindingResult.hasErrors()) {
             populateDetailModel(model, product);
             model.addAttribute("reviewForm", reviewForm);
-            model.addAttribute("reviewError", "You must be logged in to submit a review.");
             return "products/detail";
         }
 
-        if (!bindingResult.hasErrors()) {
-            Optional<Review> saved = reviewService.addReview(
-                    product, authentication.getName(), reviewForm.getRating(), reviewForm.getComment());
-            if (saved.isPresent()) {
-                return "redirect:/products/" + id;
-            }
-            bindingResult.reject("user.notfound", "Could not find your user account.");
-        }
-
-        populateDetailModel(model, product);
-        model.addAttribute("reviewForm", reviewForm);
-        return "products/detail";
+        reviewService.addReview(product, currentUser, reviewForm.getRating(), reviewForm.getComment());
+        return "redirect:/products/" + id;
     }
 
     private void populateDetailModel(Model model, Product product) {
@@ -103,12 +92,6 @@ public class ProductController {
         model.addAttribute("product", product);
         model.addAttribute("reviews", reviews);
         model.addAttribute("averageRating", reviewService.averageRating(reviews));
-    }
-
-    private boolean isAuthenticated(Authentication authentication) {
-        return authentication != null
-                && authentication.isAuthenticated()
-                && !(authentication instanceof AnonymousAuthenticationToken);
     }
 
     /**

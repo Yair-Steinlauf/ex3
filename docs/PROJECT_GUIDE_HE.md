@@ -124,6 +124,17 @@ public String detail(@PathVariable Long id, Model model) {
 
 מיפוי דפים ↔ controllers: ‏`HomeController` (דף הבית), `ProductController` (קטלוג+ביקורות), `CartController` (עגלה), `CheckoutController` (תשלום ואישור), `AuthController` (הרשמה+התחברות), `ProfileController` (פרופיל), ותחת `admin/` — dashboard, מוצרים, הזמנות, משתמשים.
 
+**כלל חשוב — דרך אחת לזהות את המשתמש:** בכל מקום שצריך את המשתמש המחובר, הקונטרולר פשוט מבקש אותו כפרמטר:
+
+```java
+public String profile(@AuthenticationPrincipal User currentUser, Model model) { ... }
+```
+
+`@AuthenticationPrincipal` היא הדרך המומלצת בספרינג; שליפה ידנית דרך `SecurityContextHolder`, או ערבוב בין `Principal` ל־`Authentication`, נחשבים דפוסים ישנים. שווה לשים לב לשתי נקודות:
+
+- זה עובד כי `User` מממשת `UserDetails` — כלומר מה שספרינג שומר בסשן אחרי ההתחברות זו הישות שלנו עצמה, ולכן אין צורך לשלוף שוב מהמסד בכל בקשה.
+- **אף קונטרולר לא בודק בעצמו אם המשתמש מחובר.** ההחלטה מי נכנס לאן מתקבלת במקום אחד בלבד — `SecurityConfig`. אם מסלול דורש התחברות, הקונטרולר יכול פשוט להניח שיש משתמש.
+
 **כלל חשוב — טופס נקשר ל־DTO, לא לישות:** ‏`AuthController.RegistrationForm` ו־`ProductController.ReviewForm` הם מחלקות "טופס" רגילות, לא `@Entity`. הסיבה מעשית: ספרינג מזריק לאובייקט הטופס גם את משתני ה־URI (למשל `{id}` מהכתובת). כשקשרנו את הטופס ישירות לישות `Review`, ה־`id` מהכתובת נכנס לישות ו־`save()` ביצע **עדכון** של ביקורת קיימת במקום הוספה — באג אמיתי שהיה בפרויקט. עם DTO הישות נבנית בשרת ו־`id` תמיד מתחיל כ־null.
 
 ### 4.5 Templates — Thymeleaf
@@ -279,6 +290,7 @@ docker compose up -d      # להרים מסד (או MySQL מקומי עם סכמ
 - **איפה טרנזקציה?** `OrderService.placeOrder` — ‏`@Transactional`, כולל rollback כשאין מלאי.
 - **איך מונעים ששני קונים יקנו את הפריט האחרון?** הורדת מלאי מותנית בפקודת UPDATE אחת (אטומי במסד).
 - **מה ההבדל בין `sec:authorize` בתבנית ל־SecurityConfig?** התבנית רק מסתירה ויזואלית; האכיפה האמיתית — בשרשרת הפילטרים.
+- **איך מקבלים את המשתמש המחובר?** `@AuthenticationPrincipal User currentUser` — דרך אחת בכל הקונטרולרים, בלי `SecurityContextHolder` ובלי בדיקות הזדהות מקומיות.
 - **למה הסיסמאות ב־BCrypt?** hash חד־כיווני עם salt — גם דליפת מסד לא חושפת סיסמאות.
 - **מה קורה על מסד ריק?** נוצר אוטומטית: סכמה (ddl-auto), אדמין וקטלוג (seeders).
 - **איך עובד עימוד?** `Pageable`/`Page` של Spring Data — ה־repository מקבל בקשת עמוד ומחזיר עמוד + מטא־נתונים (סה"כ עמודים וכו').
