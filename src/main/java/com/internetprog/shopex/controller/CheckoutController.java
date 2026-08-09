@@ -17,10 +17,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.security.Principal;
 
 /**
- * /checkout/** is expected to be guarded by SecurityConfig (owned by another
- * agent) so that anonymous requests are redirected to /login and bounced back
- * here afterwards via Spring Security's saved-request mechanism. This
- * controller does not hand-roll any of that redirect-back logic.
+ * Checkout flow. /checkout/** is guarded by SecurityConfig, so anonymous
+ * requests are redirected to /login and bounced back here afterwards via
+ * Spring Security's saved-request mechanism — no hand-rolled redirect logic.
  */
 @Controller
 public class CheckoutController {
