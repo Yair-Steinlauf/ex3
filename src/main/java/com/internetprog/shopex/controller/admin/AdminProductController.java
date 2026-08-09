@@ -56,6 +56,17 @@ public class AdminProductController {
         });
     }
 
+    /**
+     * Shared model attributes for the create/edit form. The title is computed
+     * here rather than in the template: Thymeleaf forbids conditional
+     * expressions inside a fragment parameter, which is what the layout's
+     * head(title=...) call is.
+     */
+    private void populateFormModel(Model model, Product product) {
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("formTitle", product.getId() == null ? "New Product" : "Edit Product");
+    }
+
     @GetMapping
     public String list(Model model) {
         model.addAttribute("products", productRepository.findAll());
@@ -64,8 +75,9 @@ public class AdminProductController {
 
     @GetMapping("/new")
     public String newForm(Model model) {
-        model.addAttribute("product", new Product());
-        model.addAttribute("categories", categoryRepository.findAll());
+        Product product = new Product();
+        model.addAttribute("product", product);
+        populateFormModel(model, product);
         return "admin/product-form";
     }
 
@@ -74,7 +86,7 @@ public class AdminProductController {
         return productRepository.findById(id)
                 .map(product -> {
                     model.addAttribute("product", product);
-                    model.addAttribute("categories", categoryRepository.findAll());
+                    populateFormModel(model, product);
                     return "admin/product-form";
                 })
                 .orElseGet(() -> {
@@ -89,7 +101,7 @@ public class AdminProductController {
                           Model model,
                           RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("categories", categoryRepository.findAll());
+            populateFormModel(model, product);
             return "admin/product-form";
         }
         productRepository.save(product);
@@ -104,7 +116,7 @@ public class AdminProductController {
                           Model model,
                           RedirectAttributes redirectAttributes) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("categories", categoryRepository.findAll());
+            populateFormModel(model, product);
             return "admin/product-form";
         }
         return productRepository.findById(id)

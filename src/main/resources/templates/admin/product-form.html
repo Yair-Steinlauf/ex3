@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <th:block th:replace="~{fragments/layout :: head(title=${product.id == null ? 'New Product' : 'Edit Product'})}"></th:block>
+    <th:block th:replace="~{fragments/layout :: head(title=${formTitle})}"></th:block>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
 <main>
-    <h1 th:text="${product.id == null ? 'New Product' : 'Edit Product'}">Product Form</h1>
+    <h1 th:text="${formTitle}">Product Form</h1>
 
     <form th:action="${product.id == null} ? @{/admin/products} : @{/admin/products/{id}(id=${product.id})}"
           th:object="${product}" method="post" class="form">
