@@ -14,6 +14,10 @@ import java.util.Optional;
  * Session-scoped shopping cart. One instance per HTTP session (Spring proxies
  * this bean so it can be safely injected into singleton controllers/services).
  * Purely in-memory — no JPA entity, no static state.
+ *
+ * Methods are synchronized so two concurrent requests in the same session
+ * (e.g. a double-submit) cannot corrupt the item list; getItems() hands out a
+ * snapshot copy for the same reason.
  */
 @Component
 @SessionScope
@@ -21,7 +25,7 @@ public class CartService implements Serializable {
 
     private final List<CartItem> items = new ArrayList<>();
 
-    public void addItem(Product product, int quantity) {
+    public synchronized void addItem(Product product, int quantity) {
         if (product == null || quantity <= 0) {
             return;
         }
@@ -34,11 +38,11 @@ public class CartService implements Serializable {
         }
     }
 
-    public void removeItem(Long productId) {
+    public synchronized void removeItem(Long productId) {
         items.removeIf(item -> item.getProductId().equals(productId));
     }
 
-    public void updateQuantity(Long productId, int quantity) {
+    public synchronized void updateQuantity(Long productId, int quantity) {
         if (quantity <= 0) {
             removeItem(productId);
             return;
@@ -46,21 +50,21 @@ public class CartService implements Serializable {
         findItem(productId).ifPresent(item -> item.setQuantity(quantity));
     }
 
-    public List<CartItem> getItems() {
-        return items;
+    public synchronized List<CartItem> getItems() {
+        return List.copyOf(items);
     }
 
-    public BigDecimal getTotal() {
+    public synchronized BigDecimal getTotal() {
         return items.stream()
                 .map(CartItem::getSubtotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public int getItemCount() {
+    public synchronized int getItemCount() {
         return items.stream().mapToInt(CartItem::getQuantity).sum();
     }
 
-    public void clear() {
+    public synchronized void clear() {
         items.clear();
     }
 
