@@ -15,7 +15,12 @@ See [`docs/COURSE_MAPPING.md`](docs/COURSE_MAPPING.md) for how each part of this
 
 ## Compile & run
 
-Requires a MySQL/MariaDB server with a database named `ex4` reachable at `localhost:3306` (a `docker-compose.yml` is included for a local MariaDB container: `docker compose up -d`). Default credentials expected by `application.properties`: db `ex4`, user/pass `shopex`/`shopex` (matching the provided `docker-compose.yml`).
+Requires:
+
+- **JDK 21 or newer** on the `PATH`/`JAVA_HOME` (Maven itself is provided by the wrapper).
+- A MySQL/MariaDB server with a database named `ex4` reachable at `localhost:3306` (a `docker-compose.yml` is included for a local MariaDB container: `docker compose up -d`). Default credentials expected by `application.properties`: db `ex4`, user/pass `shopex`/`shopex` (matching the provided `docker-compose.yml`).
+
+**Start the database before building** — the test phase of `clean package` boots the application context, which connects to the database.
 
 ```
 mvnw clean package
@@ -44,6 +49,6 @@ _(placeholder — add the recording link here before submission)_
 
 ## Notes for the grader
 
-- Tech stack: Spring Boot 4, Java 25, Spring Data JPA/Hibernate, Thymeleaf, Spring Security (lambda DSL, database-backed authentication, BCrypt), Maven Wrapper.
+- Tech stack: Spring Boot 4, Java 21+, Spring Data JPA/Hibernate, Thymeleaf, Spring Security (lambda DSL, database-backed authentication, BCrypt), Maven Wrapper.
 - Session usage: the shopping cart is a `@SessionScope` injected bean (`CartService`), not raw `HttpSession` attribute access.
 - CSRF protection is enabled (default); all forms use Thymeleaf's `th:action`, which auto-includes the CSRF token.
