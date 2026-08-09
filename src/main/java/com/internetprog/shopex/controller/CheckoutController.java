@@ -43,7 +43,6 @@ public class CheckoutController {
     public String checkout(Model model) {
         model.addAttribute("cartItems", cartService.getItems());
         model.addAttribute("cartTotal", cartService.getTotal());
-        model.addAttribute("cartCount", cartService.getItemCount());
         return "checkout/checkout";
     }
 
@@ -58,7 +57,6 @@ public class CheckoutController {
             model.addAttribute("errorMessage", ex.getMessage());
             model.addAttribute("cartItems", cartService.getItems());
             model.addAttribute("cartTotal", cartService.getTotal());
-            model.addAttribute("cartCount", cartService.getItemCount());
             return "checkout/checkout";
         }
     }

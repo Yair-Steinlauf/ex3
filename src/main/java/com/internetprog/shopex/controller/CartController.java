@@ -30,7 +30,6 @@ public class CartController {
     public String viewCart(Model model) {
         model.addAttribute("cartItems", cartService.getItems());
         model.addAttribute("cartTotal", cartService.getTotal());
-        model.addAttribute("cartCount", cartService.getItemCount());
         return "cart/view";
     }
 
