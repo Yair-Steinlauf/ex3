@@ -15,6 +15,9 @@
     <p class="alert alert-success" th:if="${param.logout}">
         You have been logged out.
     </p>
+    <p class="alert alert-error" th:if="${param.disabled}">
+        Your account has been disabled. Please contact the site administrator.
+    </p>
 
     <form class="form" th:action="@{/login}" method="post">
         <label for="username">Email</label>
