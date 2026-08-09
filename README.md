@@ -20,7 +20,7 @@ Requires:
 - **JDK 21 or newer** on the `PATH`/`JAVA_HOME` (Maven itself is provided by the wrapper).
 - A MySQL/MariaDB server with a database named `ex4` reachable at `localhost:3306` (a `docker-compose.yml` is included for a local MariaDB container: `docker compose up -d`). Default credentials expected by `application.properties`: db `ex4`, user/pass `shopex`/`shopex` (matching the provided `docker-compose.yml`).
 
-**Start the database before building** — the test phase of `clean package` boots the application context, which connects to the database.
+The database is only needed to **run** the site: the test suite uses an in-memory H2 database, so `mvnw clean package` succeeds without a MySQL server running.
 
 ```
 mvnw clean package
@@ -52,3 +52,4 @@ _(placeholder — add the recording link here before submission; see [`docs/DEMO
 - Tech stack: Spring Boot 4, Java 21+, Spring Data JPA/Hibernate, Thymeleaf, Spring Security (lambda DSL, database-backed authentication, BCrypt), Maven Wrapper.
 - Session usage: the shopping cart is a `@SessionScope` injected bean (`CartService`), not raw `HttpSession` attribute access.
 - CSRF protection is enabled (default); all forms use Thymeleaf's `th:action`, which auto-includes the CSRF token.
+- Automated tests: 47 JUnit tests (`mvnw test`) covering the repositories and checkout service as slice tests (`@DataJpaTest`) and the web layer with MockMvc — access-control matrix, CSRF enforcement, the cart/checkout journey, review submission, admin product CRUD, and error pages. They run against in-memory H2 and need no external database.

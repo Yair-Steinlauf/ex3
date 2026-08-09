@@ -50,6 +50,42 @@ Verified green after the fixes, on a rebuilt app booted against an empty databas
 - SQL injection in search has no effect (parameterized); public pages escape HTML correctly; Hebrew/UTF-8 round-trips through `utf8mb4`.
 - **Zero unhandled exceptions** in the application log across the entire run.
 
+### Fourth round — best-practice audit and an automated test suite
+
+Checked against published Spring Boot / Spring Security / OWASP guidance (sources at the bottom), then closed the gaps.
+
+| Practice | Status |
+|---|---|
+| Constructor injection, no field `@Autowired`, no global static state | ✅ throughout |
+| Bind forms to DTOs, never to JPA entities | ✅ for registration and reviews. ⚠️ `AdminProductController` still binds `Product` directly — admin-only, and the copy-onto-managed-entity in `update` keeps it safe, but it is the same pattern that caused the review bug |
+| `spring.jpa.open-in-view` disabled (avoid hidden queries / N+1 during rendering) | ✅ now disabled; the confirmation page fetches its lines with `@EntityGraph` in one query |
+| Transactions around writes; all-or-nothing checkout | ✅ `@Transactional` on `placeOrder`, verified by test |
+| Passwords hashed with BCrypt, never stored or logged in clear | ✅ |
+| CSRF protection enabled on all state-changing requests | ✅ verified by test, including `logout` |
+| Session fixation protection (new session id at login) | ✅ Spring Security default (`changeSessionId`) |
+| Session cookie: `HttpOnly` + `SameSite` | ✅ `HttpOnly` from the container, `SameSite=Lax` via `CookieSameSiteSupplier` |
+| Baseline security headers | ✅ `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, no-store `Cache-Control` |
+| Output escaping / no HTML or JS injection | ✅ `th:text` everywhere; the admin `confirm()` interpolation was removed |
+| Server-side validation with feedback, not just client-side | ✅ Bean Validation + `BindingResult` on every form |
+| Custom error pages with correct status codes | ✅ 400 / 403 / 404 / 500 |
+| Externalised configuration, profiles for test vs. run | ✅ `application.properties` + `application-test.properties` |
+| Test pyramid: many fast slice tests, fewer integration tests | ✅ added (below) |
+| Tests must not depend on external infrastructure | ✅ added — the suite runs on in-memory H2 |
+
+**Test suite added** — 47 JUnit 5 tests, all green with **MySQL stopped**, so `mvnw clean package` no longer needs a database:
+
+| Class | Kind | Covers |
+|---|---|---|
+| `ProductRepositoryTest` | `@DataJpaTest` | derived queries, pagination, and the conditional `decrementStock` guard |
+| `OrderServiceTest` | `@DataJpaTest` + `@Import` | order creation, stock movement, total = sum of lines, empty-cart and short-stock aborts, cross-line rollback |
+| `SecurityAccessControlTest` | `@SpringBootTest` + MockMvc | the anonymous/user/admin route matrix, admin write endpoints, CSRF enforcement, security headers |
+| `CartCheckoutFlowTest` | `@SpringBootTest` + MockMvc | guest cart, session isolation, quantity edits, checkout, confirmation rendering, ownership check, oversell rejection |
+| `ReviewSubmissionTest` | `@SpringBootTest` + MockMvc | regression: a new review is inserted and an existing one is left untouched; rating range; anonymous blocked |
+| `AdminProductFormTest` | `@SpringBootTest` + MockMvc | regression: the form renders; create/update/validation behaviour |
+| `ErrorHandlingTest` | `@SpringBootTest` + MockMvc | 404 / 400 / 403 statuses and pages, out-of-range paging, SQL-injection-shaped search input |
+
+Sources consulted: [Spring Boot testing reference](https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html), [Spring Security testing reference](https://docs.spring.io/spring-security/site/docs/5.2.x/reference/html/test.html), [Zalando: testing efficiency in Spring Boot](https://engineering.zalando.com/posts/2023/11/mastering-testing-efficiency-in-spring-boot-optimization-strategies-and-best-practices.html), [Vlad Mihalcea: the Open Session In View anti-pattern](https://vladmihalcea.com/the-open-session-in-view-anti-pattern/), [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html), [Baeldung: control the session with Spring Security](https://www.baeldung.com/spring-security-session).
+
 Still open: recording + linking the **demo video** — see `docs/DEMO_GUIDE.md`.
 
 ## Requirements checklist

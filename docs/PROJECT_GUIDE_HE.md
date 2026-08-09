@@ -45,19 +45,20 @@ ex3/
 ├── mvnw, mvnw.cmd           ← Maven Wrapper: מריץ Maven בלי להתקין אותו
 ├── docker-compose.yml       ← מרים MariaDB מקומי עם מסד ex4 בפקודה אחת
 ├── docs/                    ← מסמכים: dump של המסד, מדריכים
-└── src/main/
-    ├── java/com/internetprog/shopex/
-    │   ├── ShopexApplication.java   ← נקודת הכניסה (main)
-    │   ├── config/                  ← הגדרות: אבטחה, טיפול בשגיאות, badge של העגלה
-    │   ├── entity/                  ← מחלקות שממופות לטבלאות במסד (JPA)
-    │   ├── repository/              ← ממשקי גישה למסד (Spring Data)
-    │   ├── service/                 ← לוגיקה עסקית + עגלת קניות + זריעת נתונים
-    │   └── controller/              ← מקבלים בקשות HTTP ומחזירים שם של תבנית
-    │       └── admin/               ← ה־controllers של ממשק הניהול
-    └── resources/
-        ├── application.properties   ← חיבור למסד והגדרות
-        ├── static/css/style.css     ← קובץ עיצוב (מוגש כמו שהוא)
-        └── templates/               ← תבניות Thymeleaf (ה"דפים" של האתר)
+├── src/main/
+│   ├── java/com/internetprog/shopex/
+│   │   ├── ShopexApplication.java   ← נקודת הכניסה (main)
+│   │   ├── config/                  ← הגדרות: אבטחה, פילטר, טיפול בשגיאות, badge של העגלה
+│   │   ├── entity/                  ← מחלקות שממופות לטבלאות במסד (JPA)
+│   │   ├── repository/              ← ממשקי גישה למסד (Spring Data)
+│   │   ├── service/                 ← לוגיקה עסקית + עגלת קניות + זריעת נתונים
+│   │   └── controller/              ← מקבלים בקשות HTTP ומחזירים שם של תבנית
+│   │       └── admin/               ← ה־controllers של ממשק הניהול
+│   └── resources/
+│       ├── application.properties   ← חיבור למסד והגדרות
+│       ├── static/css/style.css     ← קובץ עיצוב (מוגש כמו שהוא)
+│       └── templates/               ← תבניות Thymeleaf (ה"דפים" של האתר)
+└── src/test/                        ← 47 טסטים אוטומטיים (ראו סעיף 8)
 ```
 
 ## 4. השכבות, אחת־אחת
@@ -122,6 +123,8 @@ public String detail(@PathVariable Long id, Model model) {
 ```
 
 מיפוי דפים ↔ controllers: ‏`HomeController` (דף הבית), `ProductController` (קטלוג+ביקורות), `CartController` (עגלה), `CheckoutController` (תשלום ואישור), `AuthController` (הרשמה+התחברות), `ProfileController` (פרופיל), ותחת `admin/` — dashboard, מוצרים, הזמנות, משתמשים.
+
+**כלל חשוב — טופס נקשר ל־DTO, לא לישות:** ‏`AuthController.RegistrationForm` ו־`ProductController.ReviewForm` הם מחלקות "טופס" רגילות, לא `@Entity`. הסיבה מעשית: ספרינג מזריק לאובייקט הטופס גם את משתני ה־URI (למשל `{id}` מהכתובת). כשקשרנו את הטופס ישירות לישות `Review`, ה־`id` מהכתובת נכנס לישות ו־`save()` ביצע **עדכון** של ביקורת קיימת במקום הוספה — באג אמיתי שהיה בפרויקט. עם DTO הישות נבנית בשרת ו־`id` תמיד מתחיל כ־null.
 
 ### 4.5 Templates — Thymeleaf
 
@@ -207,7 +210,16 @@ Spring יוצר **מופע נפרד לכל session**, ומזריק ל־controlle
 `application.properties` כולל `createDatabaseIfNotExist=true` (יוצר את הסכמה), `ddl-auto=update` (יוצר טבלאות), ושני seeders שמאזינים ל־`ApplicationReadyEvent`: ‏`AdminSeeder` יוצר חשבון אדמין אם אין, ‏`ProductSeeder` זורע קטלוג אם אין מוצרים. לכן אפשר למחוק את המסד לגמרי — והאתר עולה מוכן לעבודה.
 
 ### 6.6 טיפול בשגיאות
-`GlobalExceptionHandler` (עם `@ControllerAdvice`) תופס חריגות מכל ה־controllers: כתובת לא קיימת ⇒ דף 404 מעוצב, גישה אסורה ⇒ 403, וכל חריגה לא צפויה ⇒ נרשמת ללוג ומוצג דף 500 ידידותי. הדפים עצמם ב־`templates/error/`.
+`GlobalExceptionHandler` (עם `@ControllerAdvice`) תופס חריגות מכל ה־controllers ומחזיר את **הסטטוס הנכון** עם דף מעוצב מ־`templates/error/`:
+
+| מצב | דוגמה | תוצאה |
+|---|---|---|
+| כתובת לא קיימת / מוצר לא קיים | `/products/9999` | 404 |
+| ערך שלא ניתן להמיר בכתובת | `/products/abc`, `?page=abc` | 400 |
+| גישה אסורה | משתמש רגיל ב־`/admin` | 403 |
+| כל חריגה לא צפויה | — | נרשם ללוג, מוצג 500 ידידותי |
+
+הסדר חשוב: מטפל כללי אחד ל־`Exception` היה "בולע" גם חריגות שנושאות סטטוס משלהן והופך הכול ל־500, ולכן יש מטפלים ייעודיים **לפני** הכללי.
 
 ## 7. application.properties בשורה אחת לכל שורה
 
@@ -217,20 +229,50 @@ spring.datasource.url=jdbc:mysql://localhost:3306/ex4?createDatabaseIfNotExist=t
 spring.datasource.username/password=shopex/shopex   # פרטי החיבור (תואם ל־docker-compose)
 spring.jpa.hibernate.ddl-auto=update # Hibernate יוצר/מעדכן טבלאות לפי ה־entities
 spring.jpa.show-sql=true             # מדפיס את ה־SQL לקונסול — נוח להראות בדמו
+spring.jpa.open-in-view=false        # ראו הסבר למטה
 spring.thymeleaf.cache=false         # בזמן פיתוח: לרענן תבניות בלי הפעלה מחדש
 ```
 
-## 8. איך מריצים
+**מה זה `open-in-view`?** כברירת מחדל ספרינג משאיר את חיבור ה־JPA פתוח גם בזמן ציור התבנית, כדי שאפשר יהיה "לשלוף עוד" מהמסד באמצע ה־HTML. זה נוח אבל נחשב anti-pattern: החיבור מוחזק זמן ארוך ונוצרות שאילתות נסתרות (בעיית N+1). כיבינו את זה, ולכן כל מה שהתבנית צריכה נשלף מראש — למשל `findWithItemsById` ב־`OrderRepository` מביא הזמנה יחד עם השורות והמוצרים שלה בשאילתה אחת (`@EntityGraph`) עבור דף האישור.
+
+## 8. הטסטים האוטומטיים
+
+בפרויקט 47 טסטים תחת `src/test/`. הם רצים על **H2 בזיכרון** ולא צריכים MySQL — כלומר `./mvnw clean package` עובד גם כשהמסד כבוי. ההפרדה נעשית עם פרופיל: `@ActiveProfiles("test")` טוען את `src/test/resources/application-test.properties`.
+
+שני סוגי טסטים, לפי ההמלצה הרשמית של ספרינג:
+
+**א. טסטי "פרוסה" (slice) — מרימים רק שכבה אחת, ולכן מהירים:**
+
+| קובץ | אנוטציה | מה נבדק |
+|---|---|---|
+| `ProductRepositoryTest` | `@DataJpaTest` | חיפוש case-insensitive, סינון לפי קטגוריה, עימוד, ובעיקר `decrementStock` — שהוא מוריד מלאי רק כשיש מספיק |
+| `OrderServiceTest` | `@DataJpaTest` + `@Import` | יצירת הזמנה, הורדת מלאי, סכום = סכום השורות, ניקוי עגלה, ודחייה כשאין מלאי (כולל rollback על כל השורות) |
+
+**ב. טסטי שכבת ווב עם `MockMvc`** — שולחים בקשות HTTP מדומות בלי להרים שרת אמיתי:
+
+| קובץ | מה נבדק |
+|---|---|
+| `SecurityAccessControlTest` | מטריצת הרשאות מלאה (אנונימי/משתמש/אדמין), אכיפת CSRF, וכותרות אבטחה |
+| `CartCheckoutFlowTest` | המסע המלא: עגלה כאורח → בידוד בין סשנים → checkout → מלאי יורד → דף אישור, וגם שמשתמש אחר לא יכול לפתוח הזמנה שאינה שלו |
+| `ReviewSubmissionTest` | שביקורת חדשה **מתווספת** ולא דורסת ביקורת קיימת (הבאג מסעיף 4.4), ושדירוג לא חוקי נדחה |
+| `AdminProductFormTest` | שטופס המוצר נפתח (באג ה־500 שהיה), ושולידציה מציגה שגיאות בלי לשמור זבל |
+| `ErrorHandlingTest` | 404 / 400 / 403 מחזירים את הסטטוס והדף הנכונים |
+
+שני כלים ששווה להכיר בטסטים האלה: `.with(user(someUser))` מריץ בקשה בתור משתמש מסוים, ו־`.with(csrf())` מצרף token תקין — בלעדיו הבקשה נדחית, וזה בדיוק מה שאנחנו רוצים לבדוק.
+
+הרצה: `./mvnw test`
+
+## 9. איך מריצים
 
 ```bash
 docker compose up -d      # להרים מסד (או MySQL מקומי עם סכמה ex4)
-./mvnw clean package      # קומפילציה + טסטים (המסד חייב לרוץ — הטסט מרים את האפליקציה)
+./mvnw clean package      # קומפילציה + טסטים (לא צריך שהמסד ירוץ — הטסטים על H2)
 ./mvnw spring-boot:run    # http://localhost:8080
 ```
 
 אדמין: `admin@shopex.local` / `Admin123!`. ‏dump לדוגמה: `docs/ex4_dump.sql` (כולל לקוח דמו `demo@shopex.local` / `Demo1234!` והזמנה אחת).
 
-## 9. שאלות שסביר שישאלו — ותשובה בשורה
+## 10. שאלות שסביר שישאלו — ותשובה בשורה
 
 - **איפה ה־MVC?** Model = entities + הנתונים ב־Model, ‏View = תבניות Thymeleaf, ‏Controller = תיקיית controller.
 - **איפה שימוש ב־session?** העגלה — bean בסקופ session, מוזרק דרך proxy (לא `HttpSession` ידני).
@@ -240,3 +282,6 @@ docker compose up -d      # להרים מסד (או MySQL מקומי עם סכמ
 - **למה הסיסמאות ב־BCrypt?** hash חד־כיווני עם salt — גם דליפת מסד לא חושפת סיסמאות.
 - **מה קורה על מסד ריק?** נוצר אוטומטית: סכמה (ddl-auto), אדמין וקטלוג (seeders).
 - **איך עובד עימוד?** `Pageable`/`Page` של Spring Data — ה־repository מקבל בקשת עמוד ומחזיר עמוד + מטא־נתונים (סה"כ עמודים וכו').
+- **למה טופס נקשר ל־DTO ולא לישות?** כי ספרינג מזריק לאובייקט הטופס גם משתני URI; קשירה לישות `Review` גרמה ל־`save()` לעדכן ביקורת קיימת במקום להוסיף.
+- **למה כיביתם `open-in-view`?** כדי שלא ייווצרו שאילתות נסתרות בזמן ציור ה־HTML; מה שהתבנית צריכה נשלף מראש עם `@EntityGraph`.
+- **איך בודקים שהאתר באמת עובד?** 47 טסטים אוטומטיים על H2 (`./mvnw test`) — פירוט בסעיף 8.
