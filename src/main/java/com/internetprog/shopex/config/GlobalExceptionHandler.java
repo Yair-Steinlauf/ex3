@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -47,6 +49,17 @@ public class GlobalExceptionHandler {
         ModelAndView mav = new ModelAndView(view);
         mav.setStatus(status);
         return mav;
+    }
+
+    /**
+     * A path variable or query parameter that cannot be converted to the
+     * declared type (e.g. /products/abc, ?page=abc) is a malformed request,
+     * not a server fault.
+     */
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, MissingServletRequestParameterException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public String handleBadRequest() {
+        return "error/400";
     }
 
     @ExceptionHandler(Exception.class)
