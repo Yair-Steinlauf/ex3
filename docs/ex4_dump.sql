@@ -88,8 +88,9 @@ INSERT INTO users (first_name, last_name, email, password, role, enabled) VALUES
 INSERT INTO categories (name) VALUES
 ('Electronics'), ('Home & Kitchen'), ('Books');
 
+-- Stock for products 1 and 9 already reflects the demo customer's sample order below.
 INSERT INTO products (name, description, price, stock, image_url, category_id) VALUES
-('Wireless Noise-Cancelling Headphones', 'Over-ear Bluetooth headphones with active noise cancellation and 30-hour battery life.', 199.99, 45, 'https://picsum.photos/seed/headphones/400/300', 1),
+('Wireless Noise-Cancelling Headphones', 'Over-ear Bluetooth headphones with active noise cancellation and 30-hour battery life.', 199.99, 44, 'https://picsum.photos/seed/headphones/400/300', 1),
 ('4K Ultra HD Smart TV - 55 inch', '55-inch 4K smart television with HDR support and built-in streaming apps.', 549.00, 20, 'https://picsum.photos/seed/tv/400/300', 1),
 ('Mechanical Keyboard RGB', 'Compact mechanical keyboard with hot-swappable switches and per-key RGB lighting.', 89.90, 60, 'https://picsum.photos/seed/keyboard/400/300', 1),
 ('Wireless Ergonomic Mouse', 'Ergonomic wireless mouse with adjustable DPI and silent clicks.', 34.50, 100, 'https://picsum.photos/seed/mouse/400/300', 1),
@@ -97,10 +98,21 @@ INSERT INTO products (name, description, price, stock, image_url, category_id) V
 ('Programmable Coffee Maker', '12-cup programmable drip coffee maker with reusable filter and auto shut-off.', 54.99, 40, 'https://picsum.photos/seed/coffee/400/300', 2),
 ('Robot Vacuum Cleaner', 'Smart robot vacuum with mapping navigation and app control.', 249.00, 15, 'https://picsum.photos/seed/vacuum/400/300', 2),
 ('Non-Stick Frying Pan Set', '3-piece non-stick frying pan set in multiple sizes, PFOA-free coating.', 39.99, 80, 'https://picsum.photos/seed/pan/400/300', 2),
-('Clean Code: A Handbook of Agile Software Craftsmanship', 'Classic software engineering book on writing maintainable, readable code.', 42.00, 50, 'https://picsum.photos/seed/cleancode/400/300', 3),
+('Clean Code: A Handbook of Agile Software Craftsmanship', 'Classic software engineering book on writing maintainable, readable code.', 42.00, 49, 'https://picsum.photos/seed/cleancode/400/300', 3),
 ('Designing Data-Intensive Applications', 'In-depth guide to the architecture of modern data systems.', 48.50, 35, 'https://picsum.photos/seed/ddia/400/300', 3);
 
 -- Sample review data so the review UI isn't empty
 INSERT INTO reviews (product_id, user_id, rating, comment) VALUES
 (1, 2, 5, 'Excellent sound quality and the battery really does last all day.'),
 (3, 2, 4, 'Great feel, a bit loud for an office setting.');
+
+-- Sample order for the demo customer so the admin orders page, the dashboard's
+-- pending count, and the profile order history have data to play with.
+-- Total = 1 x 199.99 (product 1) + 1 x 42.00 (product 9) = 241.99; the stock
+-- values above already account for these two units.
+INSERT INTO orders (user_id, status, total_amount) VALUES
+(2, 'PENDING', 241.99);
+
+INSERT INTO order_items (order_id, product_id, quantity, price_at_purchase) VALUES
+(1, 1, 1, 199.99),
+(1, 9, 1, 42.00);

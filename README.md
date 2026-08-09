@@ -37,7 +37,7 @@ Then open `http://localhost:8080`.
 
 ## Sample data / SQL dump
 
-[`docs/ex4_dump.sql`](docs/ex4_dump.sql) contains the full schema plus the same seed data the app creates automatically (admin account, 3 categories, 10 products, a couple of reviews), so the database can be inspected directly without first running the app. Import with:
+[`docs/ex4_dump.sql`](docs/ex4_dump.sql) contains the full schema plus the seed data the app creates automatically (admin account, 3 categories, 10 products, a couple of reviews), and additionally a demo customer with one sample pending order — so every page, including the admin order management and the profile order history, has data to play with straight after import. Import with:
 
 ```
 mysql -u root -p ex4 < docs/ex4_dump.sql
@@ -45,7 +45,7 @@ mysql -u root -p ex4 < docs/ex4_dump.sql
 
 ## Demo recording
 
-_(placeholder — add the recording link here before submission)_
+_(placeholder — add the recording link here before submission; see [`docs/DEMO_GUIDE.md`](docs/DEMO_GUIDE.md) for the recording plan)_
 
 ## Notes for the grader
 
