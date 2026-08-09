@@ -9,9 +9,11 @@ import com.internetprog.shopex.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+
 /**
- * Owns the transactional "place order" workflow: validate stock for every
- * cart line, then create the order + items and decrement stock atomically.
+ * Owns the transactional "place order" workflow: reserve stock for every cart
+ * line and create the order + items atomically.
  */
 @Service
 public class OrderService {
@@ -26,9 +28,12 @@ public class OrderService {
 
     /**
      * Places an order for the given user from the contents of the given cart.
-     * Validates stock for every line first; if any line is short, throws and
-     * nothing is persisted (the whole transaction rolls back). On success the
-     * cart is cleared and the persisted order (with its items) is returned.
+     * Stock for each line is taken with a conditional single-statement UPDATE
+     * ({@link ProductRepository#decrementStock}), so a concurrent checkout for
+     * the same product cannot oversell; if any line is short, the exception
+     * rolls back the whole transaction (including decrements already made for
+     * earlier lines). On success the cart is cleared and the persisted order
+     * (with its items) is returned.
      */
     @Transactional
     public Order placeOrder(User user, CartService cart) {
@@ -36,28 +41,20 @@ public class OrderService {
             throw new IllegalStateException("Your cart is empty.");
         }
 
-        // Validate stock for every line up front so a shortage on any single
-        // line aborts the whole order instead of partially creating it.
-        for (CartService.CartItem line : cart.getItems()) {
-            Product product = productRepository.findById(line.getProductId())
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Product no longer available: " + line.getName()));
-            if (product.getStock() < line.getQuantity()) {
-                throw new IllegalStateException(
-                        "Not enough stock for \"" + product.getName() + "\" (only "
-                                + product.getStock() + " left).");
-            }
-        }
-
         Order order = new Order();
         order.setUser(user);
         order.setStatus("PENDING");
-        order.setTotalAmount(cart.getTotal());
 
+        BigDecimal total = BigDecimal.ZERO;
         for (CartService.CartItem line : cart.getItems()) {
             Product product = productRepository.findById(line.getProductId())
                     .orElseThrow(() -> new IllegalStateException(
                             "Product no longer available: " + line.getName()));
+
+            if (productRepository.decrementStock(product.getId(), line.getQuantity()) == 0) {
+                throw new IllegalStateException(
+                        "Not enough stock for \"" + product.getName() + "\".");
+            }
 
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
@@ -66,9 +63,13 @@ public class OrderService {
             orderItem.setPriceAtPurchase(product.getPrice());
             order.getItems().add(orderItem);
 
-            product.setStock(product.getStock() - line.getQuantity());
-            productRepository.save(product);
+            total = total.add(product.getPrice().multiply(BigDecimal.valueOf(line.getQuantity())));
         }
+
+        // Total is derived from the order's own lines (price at purchase), so
+        // it always equals the sum of the items even if a price changed while
+        // the product sat in the cart.
+        order.setTotalAmount(total);
 
         Order saved = orderRepository.save(order);
         cart.clear();
