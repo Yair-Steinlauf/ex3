@@ -17,37 +17,39 @@
     </div>
 
     <div th:if="${cartItems != null and !cartItems.isEmpty()}">
-        <table>
-            <thead>
-            <tr>
-                <th>Product</th>
-                <th>Unit price</th>
-                <th>Quantity</th>
-                <th>Subtotal</th>
-                <th></th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr th:each="item : ${cartItems}">
-                <td th:text="${item.name}">Product</td>
-                <td th:text="${item.unitPrice} + ' ₪'">0 ₪</td>
-                <td>
-                    <form th:action="@{/cart/update}" method="post" class="inline-form">
-                        <input type="hidden" name="productId" th:value="${item.productId}"/>
-                        <input type="number" name="quantity" min="1" th:value="${item.quantity}" style="width:4rem"/>
-                        <button class="btn btn-secondary" type="submit">Update</button>
-                    </form>
-                </td>
-                <td th:text="${item.subtotal} + ' ₪'">0 ₪</td>
-                <td>
-                    <form th:action="@{/cart/remove}" method="post" class="inline-form">
-                        <input type="hidden" name="productId" th:value="${item.productId}"/>
-                        <button class="btn btn-danger" type="submit">Remove</button>
-                    </form>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Unit price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${cartItems}">
+                    <td th:text="${item.name}">Product</td>
+                    <td th:text="${item.unitPrice} + ' ₪'">0 ₪</td>
+                    <td>
+                        <form th:action="@{/cart/update}" method="post" class="inline-form">
+                            <input type="hidden" name="productId" th:value="${item.productId}"/>
+                            <input type="number" name="quantity" min="1" th:value="${item.quantity}" style="width:4rem"/>
+                            <button class="btn btn-secondary" type="submit">Update</button>
+                        </form>
+                    </td>
+                    <td th:text="${item.subtotal} + ' ₪'">0 ₪</td>
+                    <td>
+                        <form th:action="@{/cart/remove}" method="post" class="inline-form">
+                            <input type="hidden" name="productId" th:value="${item.productId}"/>
+                            <button class="btn btn-danger" type="submit">Remove</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
         <h2>Total: <span th:text="${cartTotal} + ' ₪'">0 ₪</span></h2>
 

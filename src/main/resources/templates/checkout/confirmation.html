@@ -15,24 +15,26 @@
     <p><strong>Status:</strong> <span th:text="${order.status}">PENDING</span></p>
     <p><strong>Placed:</strong> <span th:text="${order.orderDate}">date</span></p>
 
-    <table>
-        <thead>
-        <tr>
-            <th>Product</th>
-            <th>Quantity</th>
-            <th>Price at purchase</th>
-            <th>Subtotal</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="item : ${order.items}">
-            <td th:text="${item.product.name}">Product</td>
-            <td th:text="${item.quantity}">1</td>
-            <td th:text="${item.priceAtPurchase} + ' ₪'">0 ₪</td>
-            <td th:text="${item.priceAtPurchase * item.quantity} + ' ₪'">0 ₪</td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="table-scroll">
+        <table>
+            <thead>
+            <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Price at purchase</th>
+                <th>Subtotal</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="item : ${order.items}">
+                <td th:text="${item.product.name}">Product</td>
+                <td th:text="${item.quantity}">1</td>
+                <td th:text="${item.priceAtPurchase} + ' ₪'">0 ₪</td>
+                <td th:text="${item.priceAtPurchase * item.quantity} + ' ₪'">0 ₪</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 
     <h2>Total: <span th:text="${order.totalAmount} + ' ₪'">0 ₪</span></h2>
 

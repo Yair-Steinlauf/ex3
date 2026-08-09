@@ -14,39 +14,41 @@
 
     <p><a class="btn" th:href="@{/admin/products/new}">+ New Product</a></p>
 
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Price</th>
-            <th>Stock</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="product : ${products}">
-            <td th:text="${product.id}">1</td>
-            <td th:text="${product.name}">Name</td>
-            <td th:text="${product.category != null ? product.category.name : '—'}">Category</td>
-            <td th:text="${product.price} + ' ₪'">0</td>
-            <td th:text="${product.stock}">0</td>
-            <td>
-                <a th:href="@{/admin/products/{id}/edit(id=${product.id})}">Edit</a>
-                &nbsp;
-                <form th:action="@{/admin/products/{id}/delete(id=${product.id})}" method="post" class="inline-form"
-                      th:attr="data-product-name=${product.name}"
-                      onsubmit="return confirm('Delete product: ' + this.dataset.productName + '\nThis cannot be undone.');">
-                    <button type="submit" class="link-button" style="color: var(--color-danger);">Delete</button>
-                </form>
-            </td>
-        </tr>
-        <tr th:if="${products == null or products.isEmpty()}">
-            <td colspan="6">No products yet.</td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="table-scroll">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="product : ${products}">
+                <td th:text="${product.id}">1</td>
+                <td th:text="${product.name}">Name</td>
+                <td th:text="${product.category != null ? product.category.name : '—'}">Category</td>
+                <td th:text="${product.price} + ' ₪'">0</td>
+                <td th:text="${product.stock}">0</td>
+                <td>
+                    <a th:href="@{/admin/products/{id}/edit(id=${product.id})}">Edit</a>
+                    &nbsp;
+                    <form th:action="@{/admin/products/{id}/delete(id=${product.id})}" method="post" class="inline-form"
+                          th:attr="data-product-name=${product.name}"
+                          onsubmit="return confirm('Delete product: ' + this.dataset.productName + '\nThis cannot be undone.');">
+                        <button type="submit" class="link-button" style="color: var(--color-danger);">Delete</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${products == null or products.isEmpty()}">
+                <td colspan="6">No products yet.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </main>
 <div th:replace="~{fragments/layout :: footer}"></div>
 </body>

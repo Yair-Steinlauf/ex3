@@ -12,39 +12,41 @@
     <p class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}">Success</p>
     <p class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}">Error</p>
 
-    <table>
-        <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="u : ${users}">
-            <td th:text="${u.id}">1</td>
-            <td th:text="${u.firstName} + ' ' + ${u.lastName}">Name</td>
-            <td th:text="${u.email}">email@example.com</td>
-            <td th:text="${u.role}">USER</td>
-            <td th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</td>
-            <td>
-                <span th:if="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}" class="error-text">(this is you)</span>
-                <form th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
-                      th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post" class="inline-form"
-                      th:attr="data-user-email=${u.email},data-action=${u.enabled} ? 'Disable' : 'Enable'"
-                      onsubmit="return confirm(this.dataset.action + ' user ' + this.dataset.userEmail + '?');">
-                    <button type="submit" class="link-button" th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
-                </form>
-            </td>
-        </tr>
-        <tr th:if="${users == null or users.isEmpty()}">
-            <td colspan="6">No users yet.</td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="table-scroll">
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${users}">
+                <td th:text="${u.id}">1</td>
+                <td th:text="${u.firstName} + ' ' + ${u.lastName}">Name</td>
+                <td th:text="${u.email}">email@example.com</td>
+                <td th:text="${u.role}">USER</td>
+                <td th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</td>
+                <td>
+                    <span th:if="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}" class="error-text">(this is you)</span>
+                    <form th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
+                          th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post" class="inline-form"
+                          th:attr="data-user-email=${u.email},data-action=${u.enabled} ? 'Disable' : 'Enable'"
+                          onsubmit="return confirm(this.dataset.action + ' user ' + this.dataset.userEmail + '?');">
+                        <button type="submit" class="link-button" th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
+                    </form>
+                </td>
+            </tr>
+            <tr th:if="${users == null or users.isEmpty()}">
+                <td colspan="6">No users yet.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </main>
 <div th:replace="~{fragments/layout :: footer}"></div>
 </body>
