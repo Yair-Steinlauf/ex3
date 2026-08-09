@@ -6,6 +6,19 @@ Reviewed 2026-08-09. Method: full source read, then empirical verification — `
 
 The project **meets every mandatory requirement** of the exercise, and the core flows all work end-to-end. What remains are a few real but localized bugs (error handling turns 404/403 into 500s), two submission-package problems a grader would hit in the first five minutes (`./mvnw` not executable, wrong demo password in the SQL dump), and missing README items (JDK version, demo video). None require structural changes.
 
+## Update — fixes applied (2026-08-09)
+
+All six bugs below plus the JDK/README gaps were fixed in the commits following this review, and each fix was re-verified against a fresh build and a live run:
+
+- `/products/9999` and unknown URLs now return **404** with the custom page; a foreign order confirmation and `/admin` for a non-admin return **403** with a new custom `error/403.html` (renders both from controller exceptions and from the security filter chain).
+- Cart badge is populated on **every** page via `CartModelAdvice` (verified 2 items → badge 2 on `/`, `/products`, `/cart`; 0 after checkout clears the cart).
+- `mvnw` is executable in git (mode 100755) — `./mvnw clean package` runs directly.
+- Dump demo hash regenerated; bcrypt-verified that `Demo1234!` now matches.
+- Home page renders 4 featured products.
+- `java.version` lowered to 21; full `./mvnw clean package` re-verified green on a plain JDK 21. README documents the JDK and the start-DB-before-build ordering.
+
+Still open (intentionally left for you): recording + linking the **demo video**, adding a sample order to the dump, and the optional robustness items in the last section.
+
 ## Requirements checklist
 
 | Spec requirement | Status | Evidence |
