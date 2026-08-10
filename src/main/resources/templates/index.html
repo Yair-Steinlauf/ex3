@@ -8,18 +8,20 @@
 
 <main class="container">
     <div class="p-4 p-md-5 mb-4 bg-body-tertiary rounded-3">
-        <div class="col-12 col-lg-8">
-            <h1 class="display-6 fw-bold">Welcome to ShopEx</h1>
-            <p class="text-body-secondary">Browse the catalogue, fill your cart, and check out — no account needed until you order.</p>
-            <form class="row g-2" th:action="@{/products}" method="get">
-                <div class="col-12 col-md-8">
-                    <label for="q" class="visually-hidden">Search products</label>
-                    <input type="text" class="form-control" id="q" name="q" placeholder="Search by name..."/>
-                </div>
-                <div class="col-12 col-md-4 d-grid">
-                    <button class="btn btn-primary" type="submit">Search</button>
-                </div>
-            </form>
+        <div class="row">
+            <div class="col-12 col-lg-8">
+                <h1 class="display-6 fw-bold">Welcome to ShopEx</h1>
+                <p class="text-body-secondary">Browse the catalogue, fill your cart, and check out — no account needed until you order.</p>
+                <form class="row g-2" th:action="@{/products}" method="get">
+                    <div class="col-12 col-md-8">
+                        <label for="q" class="visually-hidden">Search products</label>
+                        <input type="text" class="form-control" id="q" name="q" placeholder="Search by name..."/>
+                    </div>
+                    <div class="col-12 col-md-4 d-grid">
+                        <button class="btn btn-primary" type="submit">Search</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
