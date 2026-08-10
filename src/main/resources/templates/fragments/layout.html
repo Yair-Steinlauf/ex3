@@ -3,41 +3,82 @@
 <head>
     <th:block th:fragment="head(title)">
         <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <title th:text="${title} + ' - ShopEx'">ShopEx</title>
+        <link rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}"/>
     </th:block>
 </head>
 <body>
 
-<div th:fragment="header">
-    <header class="site-header">
-        <div class="brand"><a th:href="@{/}">ShopEx</a></div>
-        <nav class="main-nav">
-            <a th:href="@{/}">Home</a>
-            <a th:href="@{/products}">Products</a>
-            <a th:href="@{/cart}">Cart <span id="cart-count" class="cart-badge" th:text="${cartCount != null ? cartCount : 0}">0</span></a>
+<!-- Collapses into a burger menu below the lg breakpoint. -->
+<nav th:fragment="header" class="navbar navbar-expand-lg bg-body-tertiary border-bottom mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold" th:href="@{/}">ShopEx</a>
 
-            <span sec:authorize="isAuthenticated()">
-                <a th:href="@{/profile}">Profile</a>
-                <span sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/admin}">Admin</a>
-                </span>
-                <form th:action="@{/logout}" method="post" class="inline-form">
-                    <button type="submit" class="link-button">Logout (<span sec:authentication="name">user</span>)</button>
-                </form>
-            </span>
-            <span sec:authorize="isAnonymous()">
-                <a th:href="@{/login}">Login</a>
-                <a th:href="@{/register}">Register</a>
-            </span>
-        </nav>
-    </header>
-</div>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
 
-<div th:fragment="footer">
-    <footer class="site-footer">
-        <p>&copy; 2026 ShopEx &mdash; Internet Programming final project.</p>
-    </footer>
-</div>
+        <div class="collapse navbar-collapse" id="mainNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" th:href="@{/}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/products}">Products</a></li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/cart}">
+                        Cart
+                        <span id="cart-count" class="badge text-bg-secondary"
+                              th:text="${cartCount != null ? cartCount : 0}">0</span>
+                    </a>
+                </li>
+            </ul>
+
+            <ul class="navbar-nav align-items-lg-center">
+                <th:block sec:authorize="isAuthenticated()">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/profile}">Profile</a></li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/admin}">Admin</a>
+                    </li>
+                    <li class="nav-item">
+                        <form th:action="@{/logout}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                Logout (<span sec:authentication="name">user</span>)
+                            </button>
+                        </form>
+                    </li>
+                </th:block>
+                <th:block sec:authorize="isAnonymous()">
+                    <li class="nav-item"><a class="nav-link" th:href="@{/login}">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" th:href="@{/register}">Register</a></li>
+                </th:block>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<footer th:fragment="footer" class="border-top mt-5 py-4">
+    <div class="container text-body-secondary small">
+        &copy; 2026 ShopEx &mdash; Internet Programming final project.
+    </div>
+</footer>
+
+<!-- Bundle includes Popper; required by the navbar toggler. -->
+<th:block th:fragment="scripts">
+    <script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+</th:block>
+
+<!-- Shared body for the four error pages. -->
+<main th:fragment="errorPage(code, heading, message)" class="container">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-7 text-center py-5">
+            <p class="display-1 fw-bold text-body-secondary" th:text="${code}">404</p>
+            <h1 class="h3 mb-3" th:text="${heading}">Page not found</h1>
+            <p class="text-body-secondary" th:text="${message}">Something went wrong.</p>
+            <a class="btn btn-primary mt-2" th:href="@{/}">Back to home</a>
+        </div>
+    </div>
+</main>
 
 </body>
 </html>

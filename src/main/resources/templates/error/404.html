@@ -2,15 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Page not found')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>404 &mdash; Page not found</h1>
-    <p>The page you were looking for doesn't exist.</p>
-    <a class="btn" th:href="@{/}">Back to home</a>
-</main>
+<div th:replace="~{fragments/layout :: errorPage('404', 'Page not found', 'The page you were looking for does not exist.')}"></div>
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

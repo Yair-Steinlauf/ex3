@@ -2,26 +2,26 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Manage Users')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>Manage Users</h1>
 
-    <p class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}">Success</p>
-    <p class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}">Error</p>
+<main class="container">
+    <h1 class="h3 mb-4">Manage Users</h1>
 
-    <div class="table-scroll">
-        <table>
+    <div class="alert alert-success" th:if="${successMessage}" th:text="${successMessage}">Success</div>
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}">Error</div>
+
+    <div class="table-responsive">
+        <table class="table align-middle">
             <thead>
             <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Email</th>
+                <th scope="col">Role</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -30,24 +30,31 @@
                 <td th:text="${u.firstName} + ' ' + ${u.lastName}">Name</td>
                 <td th:text="${u.email}">email@example.com</td>
                 <td th:text="${u.role}">USER</td>
-                <td th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</td>
                 <td>
-                    <span th:if="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}" class="error-text">(this is you)</span>
+                    <span class="badge" th:classappend="${u.enabled} ? 'text-bg-success' : 'text-bg-secondary'"
+                          th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</span>
+                </td>
+                <td>
+                    <span th:if="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
+                          class="text-body-secondary small">(this is you)</span>
                     <form th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
-                          th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post" class="inline-form"
+                          th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post"
                           th:attr="data-user-email=${u.email},data-action=${u.enabled} ? 'Disable' : 'Enable'"
                           onsubmit="return confirm(this.dataset.action + ' user ' + this.dataset.userEmail + '?');">
-                        <button type="submit" class="link-button" th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
                     </form>
                 </td>
             </tr>
             <tr th:if="${users == null or users.isEmpty()}">
-                <td colspan="6">No users yet.</td>
+                <td colspan="6" class="text-body-secondary">No users yet.</td>
             </tr>
             </tbody>
         </table>
     </div>
 </main>
+
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

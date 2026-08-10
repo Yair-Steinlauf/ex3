@@ -1,67 +1,83 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Products')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>Products</h1>
 
-    <form class="form" th:action="@{/products}" method="get">
-        <label for="q">Search</label>
-        <input type="text" id="q" name="q" th:value="${q}" placeholder="Search by name..."/>
+<main class="container">
+    <h1 class="h3 mb-4">Products</h1>
 
-        <label for="categoryId">Category</label>
-        <select id="categoryId" name="categoryId">
-            <option value="">All categories</option>
-            <option th:each="category : ${categories}"
-                    th:value="${category.id}"
-                    th:text="${category.name}"
-                    th:selected="${categoryId != null and categoryId == category.id}">
-                Category
-            </option>
-        </select>
-
-        <label for="sort">Sort by</label>
-        <select id="sort" name="sort">
-            <option value="name" th:selected="${sort == null or sort == 'name'}">Name</option>
-            <option value="price" th:selected="${sort == 'price'}">Price</option>
-        </select>
-
-        <button class="btn" type="submit" style="margin-top: 0.75rem;">Apply</button>
-        <a th:href="@{/products}" class="btn btn-secondary" style="margin-top: 0.75rem;">Reset</a>
+    <form class="row g-2 align-items-end mb-4" th:action="@{/products}" method="get">
+        <div class="col-12 col-md-6 col-lg-4">
+            <label for="q" class="form-label">Search</label>
+            <input type="text" class="form-control" id="q" name="q" th:value="${q}" placeholder="Search by name..."/>
+        </div>
+        <div class="col-6 col-md-3 col-lg-3">
+            <label for="categoryId" class="form-label">Category</label>
+            <select class="form-select" id="categoryId" name="categoryId">
+                <option value="">All categories</option>
+                <option th:each="category : ${categories}"
+                        th:value="${category.id}"
+                        th:text="${category.name}"
+                        th:selected="${categoryId != null and categoryId == category.id}">Category</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2">
+            <label for="sort" class="form-label">Sort by</label>
+            <select class="form-select" id="sort" name="sort">
+                <option value="name" th:selected="${sort == null or sort == 'name'}">Name</option>
+                <option value="price" th:selected="${sort == 'price'}">Price</option>
+            </select>
+        </div>
+        <div class="col-12 col-lg-3 d-flex gap-2">
+            <button class="btn btn-primary flex-fill" type="submit">Apply</button>
+            <a th:href="@{/products}" class="btn btn-outline-secondary flex-fill">Reset</a>
+        </div>
     </form>
 
-    <p th:if="${productPage.totalElements == 0}">No products found.</p>
+    <p class="text-body-secondary" th:if="${productPage.totalElements == 0}">No products found.</p>
 
-    <div class="grid" th:if="${productPage.totalElements > 0}">
-        <div class="card" th:each="product : ${productPage.content}">
-            <a th:href="@{/products/{id}(id=${product.id})}">
-                <img th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
-                     th:src="${product.imageUrl}" alt="" style="width:100%; border-radius: var(--radius); margin-bottom: 0.5rem;"/>
-            </a>
-            <h3 style="margin: 0.25rem 0;">
-                <a th:href="@{/products/{id}(id=${product.id})}" th:text="${product.name}">Product name</a>
-            </h3>
-            <p th:if="${product.category != null}" class="error-text" style="color: var(--color-muted);"
-               th:text="${product.category.name}">Category</p>
-            <p th:text="${product.price} + ' ₪'">0 ₪</p>
-            <p th:if="${product.stock > 0}" th:text="'In stock: ' + ${product.stock}">In stock</p>
-            <p th:unless="${product.stock > 0}" class="error-text">Out of stock</p>
-            <a class="btn" th:href="@{/products/{id}(id=${product.id})}">View details</a>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" th:if="${productPage.totalElements > 0}">
+        <div class="col" th:each="product : ${productPage.content}">
+            <div class="card h-100">
+                <a class="ratio ratio-4x3" th:href="@{/products/{id}(id=${product.id})}"
+                   th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}">
+                    <img class="card-img-top object-fit-cover" th:src="${product.imageUrl}" alt=""/>
+                </a>
+                <div class="card-body d-flex flex-column">
+                    <h2 class="card-title h6">
+                        <a class="text-decoration-none" th:href="@{/products/{id}(id=${product.id})}"
+                           th:text="${product.name}">Product name</a>
+                    </h2>
+                    <p class="card-text small text-body-secondary mb-1"
+                       th:if="${product.category != null}" th:text="${product.category.name}">Category</p>
+                    <p class="card-text fw-semibold" th:text="${product.price} + ' ₪'">0 ₪</p>
+                    <span class="badge text-bg-success mb-3 align-self-start"
+                          th:if="${product.stock > 0}" th:text="'In stock: ' + ${product.stock}">In stock</span>
+                    <span class="badge text-bg-danger mb-3 align-self-start"
+                          th:unless="${product.stock > 0}">Out of stock</span>
+                    <a class="btn btn-sm btn-outline-primary mt-auto"
+                       th:href="@{/products/{id}(id=${product.id})}">View details</a>
+                </div>
+            </div>
         </div>
     </div>
 
-    <nav th:if="${productPage.totalPages > 1}" style="margin-top: 1.5rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
-           th:href="@{/products(q=${q}, categoryId=${categoryId}, sort=${sort}, page=${i})}"
-           th:text="${i + 1}"
-           th:classappend="${i == productPage.number} ? 'btn' : 'btn btn-secondary'"
-           class="btn">1</a>
+    <nav class="mt-4" th:if="${productPage.totalPages > 1}" aria-label="Product pages">
+        <ul class="pagination flex-wrap">
+            <li class="page-item" th:each="i : ${#numbers.sequence(0, productPage.totalPages - 1)}"
+                th:classappend="${i == productPage.number} ? 'active'">
+                <a class="page-link"
+                   th:href="@{/products(q=${q}, categoryId=${categoryId}, sort=${sort}, page=${i})}"
+                   th:text="${i + 1}">1</a>
+            </li>
+        </ul>
     </nav>
 </main>
+
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

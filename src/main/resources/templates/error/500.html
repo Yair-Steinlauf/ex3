@@ -2,15 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Something went wrong')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>500 &mdash; Something went wrong</h1>
-    <p>An unexpected error occurred. Please try again later.</p>
-    <a class="btn" th:href="@{/}">Back to home</a>
-</main>
+<div th:replace="~{fragments/layout :: errorPage('500', 'Something went wrong', 'An unexpected error occurred. Please try again later.')}"></div>
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

@@ -2,76 +2,99 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title=${product.name})}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
+
+<main class="container">
     <p><a th:href="@{/products}">&larr; Back to products</a></p>
 
-    <div class="card" style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-        <img th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
-             th:src="${product.imageUrl}" alt=""
-             style="max-width: 320px; width: 100%; border-radius: var(--radius);"/>
-        <div style="flex: 1; min-width: 250px;">
-            <h1 th:text="${product.name}">Product name</h1>
-            <p th:if="${product.category != null}" style="color: var(--color-muted);" th:text="${product.category.name}">Category</p>
-            <p style="font-size: 1.4rem; font-weight: 700;" th:text="${product.price} + ' ₪'">0 ₪</p>
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-md-5 col-lg-4">
+            <img class="img-fluid rounded" th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
+                 th:src="${product.imageUrl}" alt=""/>
+        </div>
+        <div class="col-12 col-md-7 col-lg-8">
+            <h1 class="h3" th:text="${product.name}">Product name</h1>
+            <p class="text-body-secondary" th:if="${product.category != null}" th:text="${product.category.name}">Category</p>
+            <p class="fs-4 fw-bold" th:text="${product.price} + ' ₪'">0 ₪</p>
             <p th:text="${product.description}">Description</p>
-            <p th:if="${product.stock > 0}" th:text="'In stock: ' + ${product.stock}">In stock</p>
-            <p th:unless="${product.stock > 0}" class="error-text">Out of stock</p>
+
+            <p>
+                <span class="badge text-bg-success" th:if="${product.stock > 0}"
+                      th:text="'In stock: ' + ${product.stock}">In stock</span>
+                <span class="badge text-bg-danger" th:unless="${product.stock > 0}">Out of stock</span>
+            </p>
 
             <p th:if="${!reviews.isEmpty()}">
                 Average rating:
                 <strong th:text="${#numbers.formatDecimal(averageRating, 1, 1)} + ' / 5'">0 / 5</strong>
                 (<span th:text="${reviews.size()}">0</span> review(s))
             </p>
-            <p th:if="${reviews.isEmpty()}">No reviews yet.</p>
+            <p class="text-body-secondary" th:if="${reviews.isEmpty()}">No reviews yet.</p>
 
-            <form class="form" th:action="@{/cart/add}" method="post">
+            <form class="row g-2 align-items-end" th:action="@{/cart/add}" method="post">
                 <input type="hidden" name="productId" th:value="${product.id}"/>
-                <label for="quantity">Quantity</label>
-                <input type="number" id="quantity" name="quantity" value="1" min="1" th:max="${product.stock}"/>
-                <button class="btn" type="submit" style="margin-top: 0.75rem;" th:disabled="${product.stock == 0}">Add to cart</button>
+                <div class="col-6 col-md-4 col-lg-3">
+                    <label for="quantity" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="quantity" name="quantity"
+                           value="1" min="1" th:max="${product.stock}"/>
+                </div>
+                <div class="col-6 col-md-4 col-lg-3 d-grid">
+                    <button class="btn btn-primary" type="submit" th:disabled="${product.stock == 0}">Add to cart</button>
+                </div>
             </form>
         </div>
     </div>
 
-    <section style="margin-top: 2rem;">
-        <h2>Reviews</h2>
+    <section class="row">
+        <div class="col-12 col-lg-8">
+            <h2 class="h4 mb-3">Reviews</h2>
 
-        <div class="card" th:each="review : ${reviews}" style="margin-bottom: 0.75rem;">
-            <strong th:text="${review.rating} + ' / 5'">5 / 5</strong>
-            <span th:if="${review.user != null}" style="color: var(--color-muted);"
-                  th:text="'by ' + ${review.user.firstName} + ' ' + ${review.user.lastName}">by User</span>
-            <p th:if="${review.comment != null and !review.comment.isEmpty()}" th:text="${review.comment}">Comment</p>
-        </div>
+            <div class="card mb-2" th:each="review : ${reviews}">
+                <div class="card-body py-2">
+                    <p class="mb-1">
+                        <strong th:text="${review.rating} + ' / 5'">5 / 5</strong>
+                        <span class="text-body-secondary small" th:if="${review.user != null}"
+                              th:text="'by ' + ${review.user.firstName} + ' ' + ${review.user.lastName}">by User</span>
+                    </p>
+                    <p class="mb-0" th:if="${review.comment != null and !review.comment.isEmpty()}"
+                       th:text="${review.comment}">Comment</p>
+                </div>
+            </div>
 
-        <div sec:authorize="isAuthenticated()">
-            <h3>Write a review</h3>
-            <form class="form" th:action="@{/products/{id}/reviews(id=${product.id})}" method="post" th:object="${reviewForm}">
-                <label for="rating">Rating</label>
-                <select id="rating" th:field="*{rating}">
-                    <option value="5">5 - Excellent</option>
-                    <option value="4">4 - Good</option>
-                    <option value="3">3 - Average</option>
-                    <option value="2">2 - Poor</option>
-                    <option value="1">1 - Terrible</option>
-                </select>
-                <p class="error-text" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}">Rating error</p>
-
-                <label for="comment">Comment</label>
-                <textarea id="comment" th:field="*{comment}" rows="3"></textarea>
-                <p class="error-text" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}">Comment error</p>
-
-                <button class="btn" type="submit" style="margin-top: 0.75rem;">Submit review</button>
-            </form>
-        </div>
-        <div sec:authorize="isAnonymous()">
-            <p><a th:href="@{/login}">Log in</a> to write a review.</p>
+            <div sec:authorize="isAuthenticated()" class="mt-4">
+                <h3 class="h5">Write a review</h3>
+                <form th:action="@{/products/{id}/reviews(id=${product.id})}" method="post" th:object="${reviewForm}">
+                    <div class="mb-3 col-12 col-md-6 col-lg-4">
+                        <label for="rating" class="form-label">Rating</label>
+                        <select class="form-select" id="rating" th:field="*{rating}"
+                                th:classappend="${#fields.hasErrors('rating')} ? 'is-invalid'">
+                            <option value="5">5 - Excellent</option>
+                            <option value="4">4 - Good</option>
+                            <option value="3">3 - Average</option>
+                            <option value="2">2 - Poor</option>
+                            <option value="1">1 - Terrible</option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('rating')}" th:errors="*{rating}">Rating error</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Comment</label>
+                        <textarea class="form-control" id="comment" th:field="*{comment}" rows="3"
+                                  th:classappend="${#fields.hasErrors('comment')} ? 'is-invalid'"></textarea>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('comment')}" th:errors="*{comment}">Comment error</div>
+                    </div>
+                    <button class="btn btn-primary" type="submit">Submit review</button>
+                </form>
+            </div>
+            <p sec:authorize="isAnonymous()" class="mt-3">
+                <a th:href="@{/login}">Log in</a> to write a review.
+            </p>
         </div>
     </section>
 </main>
+
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

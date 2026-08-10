@@ -2,15 +2,11 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Bad request')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>400 &mdash; Bad request</h1>
-    <p>That address contains a value we couldn't understand. Please check the link and try again.</p>
-    <a class="btn" th:href="@{/}">Back to home</a>
-</main>
+<div th:replace="~{fragments/layout :: errorPage('400', 'Bad request', 'That address contains a value we could not understand. Please check the link and try again.')}"></div>
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

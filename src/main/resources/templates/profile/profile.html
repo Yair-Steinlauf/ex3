@@ -2,45 +2,64 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='My Profile')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>My Profile</h1>
 
-    <div class="card">
-        <p><strong>Name:</strong> <span th:text="${user.firstName} + ' ' + ${user.lastName}">Jane Doe</span></p>
-        <p><strong>Email:</strong> <span th:text="${user.email}">jane@example.com</span></p>
-        <p><strong>Role:</strong> <span th:text="${user.role}">USER</span></p>
-        <p><strong>Member since:</strong> <span th:text="${user.createdAt}">2026-01-01</span></p>
+<main class="container">
+    <h1 class="h3 mb-4">My Profile</h1>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-5 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5">Name</dt>
+                        <dd class="col-7" th:text="${user.firstName} + ' ' + ${user.lastName}">Jane Doe</dd>
+                        <dt class="col-5">Email</dt>
+                        <dd class="col-7 text-break" th:text="${user.email}">jane@example.com</dd>
+                        <dt class="col-5">Role</dt>
+                        <dd class="col-7" th:text="${user.role}">USER</dd>
+                        <dt class="col-5">Member since</dt>
+                        <dd class="col-7 mb-0" th:text="${#temporals.format(user.createdAt, 'yyyy-MM-dd')}">2026-01-01</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-7 col-lg-8">
+            <h2 class="h5 mb-3">Order history</h2>
+
+            <div class="table-responsive" th:if="${orders != null and !orders.isEmpty()}">
+                <table class="table align-middle">
+                    <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Total</th>
+                        <th scope="col"></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="order : ${orders}">
+                        <td th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}">2026-01-01</td>
+                        <td><span class="badge text-bg-secondary" th:text="${order.status}">PENDING</span></td>
+                        <td th:text="${order.totalAmount} + ' ₪'">0 ₪</td>
+                        <td><a class="btn btn-sm btn-outline-primary"
+                               th:href="@{/orders/{id}/confirmation(id=${order.id})}">View</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="text-body-secondary" th:if="${orders == null or orders.isEmpty()}">
+                You haven't placed any orders yet.
+            </p>
+        </div>
     </div>
-
-    <h2 style="margin-top: 2rem;">Order history</h2>
-
-    <table th:if="${orders != null and !orders.isEmpty()}">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th>Status</th>
-            <th>Total</th>
-            <th></th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="order : ${orders}">
-            <td th:text="${order.orderDate}">2026-01-01</td>
-            <td th:text="${order.status}">PENDING</td>
-            <td th:text="${order.totalAmount} + ' ₪'">0 ₪</td>
-            <td>
-                <a th:href="@{/orders/{id}/confirmation(id=${order.id})}">View</a>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-
-    <p th:if="${orders == null or orders.isEmpty()}">You haven't placed any orders yet.</p>
 </main>
+
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

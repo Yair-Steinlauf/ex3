@@ -2,49 +2,58 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Checkout')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>Checkout</h1>
 
-    <p class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}">Error</p>
+<main class="container">
+    <h1 class="h3 mb-4">Checkout</h1>
+
+    <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}">Error</div>
 
     <div th:if="${cartItems == null or cartItems.isEmpty()}">
         <p>Your cart is empty. <a th:href="@{/products}">Browse products</a></p>
     </div>
 
-    <div th:if="${cartItems != null and !cartItems.isEmpty()}">
-        <h2>Order summary</h2>
-        <div class="table-scroll">
-            <table>
-                <thead>
-                <tr>
-                    <th>Product</th>
-                    <th>Unit price</th>
-                    <th>Quantity</th>
-                    <th>Subtotal</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="item : ${cartItems}">
-                    <td th:text="${item.name}">Product</td>
-                    <td th:text="${item.unitPrice} + ' ₪'">0 ₪</td>
-                    <td th:text="${item.quantity}">1</td>
-                    <td th:text="${item.subtotal} + ' ₪'">0 ₪</td>
-                </tr>
-                </tbody>
-            </table>
+    <div class="row g-4" th:if="${cartItems != null and !cartItems.isEmpty()}">
+        <div class="col-12 col-lg-8">
+            <h2 class="h5 mb-3">Order summary</h2>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Unit price</th>
+                        <th scope="col">Quantity</th>
+                        <th scope="col">Subtotal</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${cartItems}">
+                        <td th:text="${item.name}">Product</td>
+                        <td th:text="${item.unitPrice} + ' ₪'">0 ₪</td>
+                        <td th:text="${item.quantity}">1</td>
+                        <td th:text="${item.subtotal} + ' ₪'">0 ₪</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <h2>Total: <span th:text="${cartTotal} + ' ₪'">0 ₪</span></h2>
-
-        <form th:action="@{/checkout/place}" method="post">
-            <button class="btn" type="submit">Place order</button>
-        </form>
+        <div class="col-12 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h5 card-title">Total: <span th:text="${cartTotal} + ' ₪'">0 ₪</span></h2>
+                    <form th:action="@{/checkout/place}" method="post" class="d-grid mt-3">
+                        <button class="btn btn-primary" type="submit">Place order</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
+
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

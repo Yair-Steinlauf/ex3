@@ -2,27 +2,31 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:replace="~{fragments/layout :: head(title='Order Confirmation')}"></th:block>
-    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 <div th:replace="~{fragments/layout :: header}"></div>
-<main>
-    <h1>Order Confirmed</h1>
-    <p class="alert alert-success">
+
+<main class="container">
+    <h1 class="h3 mb-3">Order Confirmed</h1>
+    <div class="alert alert-success">
         Thank you! Your order #<span th:text="${order.id}">1</span> has been placed.
-    </p>
+    </div>
 
-    <p><strong>Status:</strong> <span th:text="${order.status}">PENDING</span></p>
-    <p><strong>Placed:</strong> <span th:text="${order.orderDate}">date</span></p>
+    <dl class="row col-12 col-md-8 col-lg-6">
+        <dt class="col-5 col-md-4">Status</dt>
+        <dd class="col-7 col-md-8" th:text="${order.status}">PENDING</dd>
+        <dt class="col-5 col-md-4">Placed</dt>
+        <dd class="col-7 col-md-8" th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}">date</dd>
+    </dl>
 
-    <div class="table-scroll">
-        <table>
+    <div class="table-responsive">
+        <table class="table">
             <thead>
             <tr>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Price at purchase</th>
-                <th>Subtotal</th>
+                <th scope="col">Product</th>
+                <th scope="col">Quantity</th>
+                <th scope="col">Price at purchase</th>
+                <th scope="col">Subtotal</th>
             </tr>
             </thead>
             <tbody>
@@ -36,10 +40,12 @@
         </table>
     </div>
 
-    <h2>Total: <span th:text="${order.totalAmount} + ' ₪'">0 ₪</span></h2>
+    <h2 class="h4">Total: <span th:text="${order.totalAmount} + ' ₪'">0 ₪</span></h2>
 
-    <a class="btn" th:href="@{/}">Continue shopping</a>
+    <a class="btn btn-primary mt-3" th:href="@{/}">Continue shopping</a>
 </main>
+
 <div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
 </body>
 </html>

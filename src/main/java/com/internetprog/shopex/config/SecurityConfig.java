@@ -31,7 +31,7 @@ public class SecurityConfig {
             // so a session belonging to a just-disabled account is ended immediately.
             .addFilterBefore(new DisabledUserFilter(userRepository), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/css/**", "/js/**", "/images/**", "/vendor/**").permitAll()
                 .requestMatchers("/").permitAll()
                 .requestMatchers("/login", "/register").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/products", "/products/**").permitAll()
