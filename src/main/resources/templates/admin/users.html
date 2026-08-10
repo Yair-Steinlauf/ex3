@@ -37,13 +37,10 @@
                 <td>
                     <span th:if="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
                           class="text-body-secondary small">(this is you)</span>
-                    <form th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
-                          th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post"
-                          th:attr="data-user-email=${u.email},data-action=${u.enabled} ? 'Disable' : 'Enable'"
-                          onsubmit="return confirm(this.dataset.action + ' user ' + this.dataset.userEmail + '?');">
-                        <button type="submit" class="btn btn-sm btn-outline-secondary"
-                                th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
-                    </form>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
+                            data-bs-toggle="modal" th:attr="data-bs-target=|#toggleUser${u.id}|"
+                            th:text="${u.enabled} ? 'Disable' : 'Enable'">Toggle</button>
                 </td>
             </tr>
             <tr th:if="${users == null or users.isEmpty()}">
@@ -51,6 +48,40 @@
             </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Outside .table-responsive so its overflow cannot clip the dialog. -->
+    <div class="modal fade"
+         th:each="u : ${users}"
+         th:unless="${currentUserEmail != null and #strings.equalsIgnoreCase(currentUserEmail, u.email)}"
+         th:id="|toggleUser${u.id}|" tabindex="-1"
+         th:attr="aria-labelledby=|toggleUserLabel${u.id}|" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" th:id="|toggleUserLabel${u.id}|"
+                        th:text="${u.enabled} ? 'Disable user' : 'Enable user'">Toggle user</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        <span th:text="${u.enabled} ? 'Disable' : 'Enable'">Disable</span>
+                        user <strong th:text="${u.email}">user@example.com</strong>?
+                    </p>
+                    <p class="text-body-secondary small mb-0 mt-2" th:if="${u.enabled}">
+                        They will be signed out immediately and cannot log in again until re-enabled.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form th:action="@{/admin/users/{id}/toggle-enabled(id=${u.id})}" method="post">
+                        <button type="submit" class="btn"
+                                th:classappend="${u.enabled} ? 'btn-danger' : 'btn-primary'"
+                                th:text="${u.enabled} ? 'Disable' : 'Enable'">Confirm</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 

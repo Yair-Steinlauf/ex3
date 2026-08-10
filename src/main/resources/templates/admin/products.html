@@ -38,11 +38,10 @@
                     <div class="d-flex gap-2">
                         <a class="btn btn-sm btn-outline-secondary"
                            th:href="@{/admin/products/{id}/edit(id=${product.id})}">Edit</a>
-                        <form th:action="@{/admin/products/{id}/delete(id=${product.id})}" method="post"
-                              th:attr="data-product-name=${product.name}"
-                              onsubmit="return confirm('Delete product: ' + this.dataset.productName + '\nThis cannot be undone.');">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                data-bs-toggle="modal" th:attr="data-bs-target=|#deleteProduct${product.id}|">
+                            Delete
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -51,6 +50,33 @@
             </tr>
             </tbody>
         </table>
+    </div>
+
+    <!-- Confirmation dialogs live outside .table-responsive: that container
+         scrolls its overflow, which would clip a modal rendered inside it. -->
+    <div class="modal fade" th:each="product : ${products}"
+         th:id="|deleteProduct${product.id}|" tabindex="-1"
+         th:attr="aria-labelledby=|deleteProductLabel${product.id}|" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" th:id="|deleteProductLabel${product.id}|">Delete product</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">
+                        Delete <strong th:text="${product.name}">Product name</strong>?
+                        This cannot be undone.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <form th:action="@{/admin/products/{id}/delete(id=${product.id})}" method="post">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </main>
 
