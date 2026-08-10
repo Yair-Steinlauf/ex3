@@ -57,7 +57,7 @@ Checked against published Spring Boot / Spring Security / OWASP guidance (source
 | Practice | Status |
 |---|---|
 | Constructor injection, no field `@Autowired`, no global static state | ✅ throughout |
-| Bind forms to DTOs, never to JPA entities | ✅ for registration and reviews. ⚠️ `AdminProductController` still binds `Product` directly — admin-only, and the copy-onto-managed-entity in `update` keeps it safe, but it is the same pattern that caused the review bug |
+| Bind forms to DTOs, never to JPA entities | ✅ for registration and reviews. ⚠️ `AdminProductController` still binds `Product` directly — admin-only, and the copy-onto-managed-entity in `update` keeps it safe, but it is the same pattern that caused the review bug. **(Resolved in the fifth round: it now binds `ProductForm`.)** |
 | `spring.jpa.open-in-view` disabled (avoid hidden queries / N+1 during rendering) | ✅ now disabled; the confirmation page fetches its lines with `@EntityGraph` in one query |
 | Transactions around writes; all-or-nothing checkout | ✅ `@Transactional` on `placeOrder`, verified by test |
 | Passwords hashed with BCrypt, never stored or logged in clear | ✅ |
