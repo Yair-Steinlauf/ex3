@@ -90,16 +90,16 @@ INSERT INTO categories (name) VALUES
 
 -- Stock for products 1 and 9 already reflects the demo customer's sample order below.
 INSERT INTO products (name, description, price, stock, image_url, category_id) VALUES
-('Wireless Noise-Cancelling Headphones', 'Over-ear Bluetooth headphones with active noise cancellation and 30-hour battery life.', 199.99, 44, 'https://picsum.photos/seed/headphones/400/300', 1),
-('4K Ultra HD Smart TV - 55 inch', '55-inch 4K smart television with HDR support and built-in streaming apps.', 549.00, 20, 'https://picsum.photos/seed/tv/400/300', 1),
-('Mechanical Keyboard RGB', 'Compact mechanical keyboard with hot-swappable switches and per-key RGB lighting.', 89.90, 60, 'https://picsum.photos/seed/keyboard/400/300', 1),
-('Wireless Ergonomic Mouse', 'Ergonomic wireless mouse with adjustable DPI and silent clicks.', 34.50, 100, 'https://picsum.photos/seed/mouse/400/300', 1),
-('Stainless Steel Cookware Set', '10-piece stainless steel cookware set, dishwasher safe and induction compatible.', 129.99, 25, 'https://picsum.photos/seed/cookware/400/300', 2),
-('Programmable Coffee Maker', '12-cup programmable drip coffee maker with reusable filter and auto shut-off.', 54.99, 40, 'https://picsum.photos/seed/coffee/400/300', 2),
-('Robot Vacuum Cleaner', 'Smart robot vacuum with mapping navigation and app control.', 249.00, 15, 'https://picsum.photos/seed/vacuum/400/300', 2),
-('Non-Stick Frying Pan Set', '3-piece non-stick frying pan set in multiple sizes, PFOA-free coating.', 39.99, 80, 'https://picsum.photos/seed/pan/400/300', 2),
-('Clean Code: A Handbook of Agile Software Craftsmanship', 'Classic software engineering book on writing maintainable, readable code.', 42.00, 49, 'https://picsum.photos/seed/cleancode/400/300', 3),
-('Designing Data-Intensive Applications', 'In-depth guide to the architecture of modern data systems.', 48.50, 35, 'https://picsum.photos/seed/ddia/400/300', 3);
+('Wireless Noise-Cancelling Headphones', 'Over-ear Bluetooth headphones with active noise cancellation and 30-hour battery life.', 199.99, 44, '/images/products/headphones.webp', 1),
+('4K Ultra HD Smart TV - 55 inch', '55-inch 4K smart television with HDR support and built-in streaming apps.', 549.00, 20, '/images/products/tv.webp', 1),
+('Mechanical Keyboard RGB', 'Compact mechanical keyboard with hot-swappable switches and per-key RGB lighting.', 89.90, 60, '/images/products/keyboard.webp', 1),
+('Wireless Ergonomic Mouse', 'Ergonomic wireless mouse with adjustable DPI and silent clicks.', 34.50, 100, '/images/products/mouse.webp', 1),
+('Stainless Steel Cookware Set', '10-piece stainless steel cookware set, dishwasher safe and induction compatible.', 129.99, 25, '/images/products/cookware.webp', 2),
+('Programmable Coffee Maker', '12-cup programmable drip coffee maker with reusable filter and auto shut-off.', 54.99, 40, '/images/products/coffee.webp', 2),
+('Robot Vacuum Cleaner', 'Smart robot vacuum with mapping navigation and app control.', 249.00, 15, '/images/products/vacuum.webp', 2),
+('Non-Stick Frying Pan Set', '3-piece non-stick frying pan set in multiple sizes, PFOA-free coating.', 39.99, 80, '/images/products/pan.webp', 2),
+('Clean Code: A Handbook of Agile Software Craftsmanship', 'Classic software engineering book on writing maintainable, readable code.', 42.00, 49, '/images/products/cleancode.webp', 3),
+('Designing Data-Intensive Applications', 'In-depth guide to the architecture of modern data systems.', 48.50, 35, '/images/products/ddia.webp', 3);
 
 -- Sample review data so the review UI isn't empty
 INSERT INTO reviews (product_id, user_id, rating, comment) VALUES

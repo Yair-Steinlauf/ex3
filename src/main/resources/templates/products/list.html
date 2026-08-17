@@ -44,7 +44,12 @@
             <div class="card h-100">
                 <a class="ratio ratio-4x3" th:href="@{/products/{id}(id=${product.id})}"
                    th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}">
-                    <img class="card-img-top object-fit-cover" th:src="${product.imageUrl}" alt=""/>
+                    <!-- A paginated grid is mostly below the fold, so defer the
+                         fetch; width/height keep the card from jumping once it
+                         arrives. -->
+                    <img class="card-img-top object-fit-cover" th:src="@{${product.imageUrl}}"
+                         th:alt="${product.name}" width="400" height="300"
+                         loading="lazy" decoding="async"/>
                 </a>
                 <div class="card-body d-flex flex-column">
                     <h2 class="card-title h6">

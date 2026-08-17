@@ -31,7 +31,10 @@
         <div class="col" th:each="product : ${featuredProducts}">
             <div class="card h-100">
                 <div class="ratio ratio-4x3" th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}">
-                    <img class="card-img-top object-fit-cover" th:src="${product.imageUrl}" alt=""/>
+                    <!-- Only four cards, and they sit at the fold, so these load
+                         eagerly: deferring them would delay the largest paint. -->
+                    <img class="card-img-top object-fit-cover" th:src="@{${product.imageUrl}}"
+                         th:alt="${product.name}" width="400" height="300" decoding="async"/>
                 </div>
                 <div class="card-body d-flex flex-column">
                     <h3 class="card-title h6" th:text="${product.name}">Product name</h3>

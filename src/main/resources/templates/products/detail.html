@@ -11,8 +11,11 @@
 
     <div class="row g-4 mb-5">
         <div class="col-12 col-md-5 col-lg-4">
+            <!-- This is the page's largest image, so ask for it up front.
+                 width/height give img-fluid an aspect ratio to reserve. -->
             <img class="img-fluid rounded" th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}"
-                 th:src="${product.imageUrl}" alt=""/>
+                 th:src="@{${product.imageUrl}}" th:alt="${product.name}"
+                 width="800" height="600" fetchpriority="high" decoding="async"/>
         </div>
         <div class="col-12 col-md-7 col-lg-8">
             <h1 class="h3" th:text="${product.name}">Product name</h1>
