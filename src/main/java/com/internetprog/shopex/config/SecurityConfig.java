@@ -43,6 +43,21 @@ public class SecurityConfig {
                 .requestMatchers("/profile", "/profile/**").authenticated()
                 .anyRequest().authenticated()
             )
+            // The site has no inline <script>/<style> and no inline style
+            // attributes, so scripts and styles can be restricted to our own
+            // origin with no 'unsafe-inline' escape hatch. img-src also allows
+            // https: because an admin may point a product at an external image.
+            .headers(headers -> headers
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; " +
+                    "script-src 'self'; " +
+                    "style-src 'self'; " +
+                    "img-src 'self' https: data:; " +
+                    "form-action 'self'; " +
+                    "base-uri 'self'; " +
+                    "object-src 'none'; " +
+                    "frame-ancestors 'none'"))
+            )
             .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl("/", false)

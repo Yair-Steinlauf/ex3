@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{fragments/layout :: head(title='Method not allowed')}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/layout :: header}"></div>
+<div th:replace="~{fragments/layout :: errorPage('405', 'Method not allowed', 'That address does not accept this kind of request. Please use the links and buttons on the site rather than a saved address.')}"></div>
+<div th:replace="~{fragments/layout :: footer}"></div>
+<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+</body>
+</html>

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -59,6 +60,17 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleBadRequest() {
         return "error/400";
+    }
+
+    /**
+     * A POST-only endpoint reached with GET (a saved URL, a crawler) is a client
+     * mistake. Without this it fell through to the catch-all below, which
+     * answered 500 and logged a full stack trace for what is routine traffic.
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    public String handleMethodNotAllowed() {
+        return "error/405";
     }
 
     @ExceptionHandler(Exception.class)

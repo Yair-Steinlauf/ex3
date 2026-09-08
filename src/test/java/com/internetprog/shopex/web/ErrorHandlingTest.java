@@ -79,6 +79,18 @@ class ErrorHandlingTest {
         mockMvc.perform(get("/products").param("q", "' OR 1=1--")).andExpect(status().isOk());
     }
 
+    /**
+     * A POST-only endpoint opened with GET used to fall through to the catch-all
+     * handler and answer 500 with a stack trace in the log.
+     */
+    @Test
+    void wrongHttpMethodReturns405NotAnInternalError() throws Exception {
+        mockMvc.perform(get("/admin/products/1/delete").with(user(admin())))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(view().name("error/405"))
+                .andExpect(content().string(containsString("Method not allowed")));
+    }
+
     @Test
     void forbiddenPageIsRenderedForNonAdmins() throws Exception {
         User regular = userRepository.findByEmail("regular-403@example.com").orElseGet(() -> {

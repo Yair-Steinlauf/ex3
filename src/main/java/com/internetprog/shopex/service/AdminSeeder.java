@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
  * Default credentials (documented here for the operator / grader):
  *   email:    admin@shopex.local
  *   password: Admin123!
- *
- * These are also printed to the console on creation.
  */
 @Component
 public class AdminSeeder {
@@ -49,7 +47,8 @@ public class AdminSeeder {
         admin.setEnabled(true);
         userRepository.save(admin);
 
-        log.info("Seeded default admin: {} / {}", ADMIN_EMAIL, ADMIN_PASSWORD);
-        System.out.println("Seeded default admin: " + ADMIN_EMAIL + " / " + ADMIN_PASSWORD);
+        // The password is deliberately not logged: log files get copied around,
+        // and it is documented in the README where an operator can find it.
+        log.info("Seeded default admin account: {} (password is in the README)", ADMIN_EMAIL);
     }
 }
