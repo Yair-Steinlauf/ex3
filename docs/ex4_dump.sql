@@ -8,6 +8,14 @@
 --   mysql -u root -p ex4 < ex4_dump.sql
 
 CREATE DATABASE IF NOT EXISTS ex4;
+
+-- The application connects as shopex/shopex (see application.properties), so the
+-- account is created here too: importing this dump as an administrator is then
+-- all the setup the app needs. Harmless if the account already exists.
+CREATE USER IF NOT EXISTS 'shopex'@'localhost' IDENTIFIED BY 'shopex';
+GRANT ALL PRIVILEGES ON ex4.* TO 'shopex'@'localhost';
+FLUSH PRIVILEGES;
+
 USE ex4;
 
 SET FOREIGN_KEY_CHECKS = 0;

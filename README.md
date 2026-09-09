@@ -18,7 +18,23 @@ See [`docs/COURSE_MAPPING.md`](docs/COURSE_MAPPING.md) for how each part of this
 Requires:
 
 - **JDK 21 or newer** on the `PATH`/`JAVA_HOME` (Maven itself is provided by the wrapper).
-- A MySQL/MariaDB server with a database named `ex4` reachable at `localhost:3306` (a `docker-compose.yml` is included for a local MariaDB container: `docker compose up -d`). Default credentials expected by `application.properties`: db `ex4`, user/pass `shopex`/`shopex` (matching the provided `docker-compose.yml`).
+- A MySQL/MariaDB server on `localhost:3306`. The app connects as **`shopex` / `shopex`** and creates the `ex4` database itself if it is missing.
+
+That account has to exist before the app starts. **One** of these is enough:
+
+| Your setup | Do this |
+|---|---|
+| Docker | `docker compose up -d` — the included `docker-compose.yml` creates the database and the account |
+| An existing MySQL (XAMPP, WAMP, phpMyAdmin…) | Import [`docs/ex4_dump.sql`](docs/ex4_dump.sql) as an administrator — one step for the account, the schema and sample data |
+| You would rather use your own MySQL account | Skip the account and pass yours instead: `mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.datasource.username=root --spring.datasource.password=yourpassword"` |
+
+Or create it by hand:
+
+```sql
+CREATE USER IF NOT EXISTS 'shopex'@'localhost' IDENTIFIED BY 'shopex';
+GRANT ALL PRIVILEGES ON ex4.* TO 'shopex'@'localhost';
+FLUSH PRIVILEGES;
+```
 
 The database is only needed to **run** the site: the test suite uses an in-memory H2 database, so `mvnw clean package` succeeds without a MySQL server running.
 
